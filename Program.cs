@@ -56,7 +56,8 @@ using (var scope = app.Services.CreateScope())
         {
             UserName = "admin@jiraclone.com",
             Email = "admin@jiraclone.com",
-            FullName = "Admin Principal"
+            FullName = "Admin Principal",
+            ProfilePictureUrl = "https://ui-avatars.com/api/?name=Admin+Principal&background=0D8ABC&color=fff"
         };
         userManager.CreateAsync(adminUser, "Admin123!").Wait(); // Esta será tu contraseña
     }

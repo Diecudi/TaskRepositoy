@@ -31,7 +31,8 @@ namespace Tasks.Controllers
                 { 
                     UserName = model.Email, 
                     Email = model.Email,
-                    FullName = model.FullName // Guardamos el nombre en MySQL
+                    FullName = model.FullName, // Guardamos el nombre en MySQL
+                    ProfilePictureUrl = "https://ui-avatars.com/api/?name=" + model.FullName.Replace(" ", "+") + "&background=random&color=fff"
                 };
                 
                 var result = await _userManager.CreateAsync(user, model.Password);
