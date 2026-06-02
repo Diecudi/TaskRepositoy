@@ -41,6 +41,28 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 
 var app = builder.Build();
 
+// --- INICIO: Crear base de datos y usuario administrador automáticamente ---
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+
+    dbContext.Database.Migrate(); // Crea las tablas en Aiven automáticamente si no existen
+
+    var adminExists = userManager.FindByEmailAsync("admin@jiraclone.com").Result;
+    if (adminExists == null)
+    {
+        var adminUser = new ApplicationUser
+        {
+            UserName = "admin@jiraclone.com",
+            Email = "admin@jiraclone.com",
+            FullName = "Admin Principal"
+        };
+        userManager.CreateAsync(adminUser, "Admin123!").Wait(); // Esta será tu contraseña
+    }
+}
+// --- FIN: Seeding ---
+
 app.UseForwardedHeaders(); // <- Agregamos esto en lugar de HttpsRedirection
 app.UseStaticFiles();
 
