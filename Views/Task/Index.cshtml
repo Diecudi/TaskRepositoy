@@ -1,0 +1,418 @@
+<style>
+    /* Variables para el Tema Claro / Oscuro */
+    :root {
+        --bg-color: #f4f5f7;
+        --text-color: #172b4d;
+        --card-bg: #ffffff;
+        --board-bg: #ebecf0;
+        --border-color: #dfe1e6;
+    }
+
+    [data-theme="dark"] {
+        --bg-color: #1d2125;
+        --text-color: #b6c2cf;
+        --card-bg: #22272b;
+        --board-bg: #161a1d;
+        --border-color: #3b4045;
+    }
+
+    body {
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* Estilos del Tablero Kanban */
+    .kanban-board {
+        display: flex;
+        gap: 1.5rem;
+        overflow-x: auto;
+        padding-bottom: 1rem;
+        align-items: flex-start;
+    }
+
+    .kanban-column {
+        background-color: var(--board-bg);
+        border-radius: 10px;
+        min-width: 320px;
+        max-width: 320px;
+        padding: 1rem;
+        border: 1px solid var(--border-color);
+    }
+
+    .task-card {
+        background-color: var(--card-bg);
+        color: var(--text-color);
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 12px;
+        cursor: grab;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        border: 1px solid var(--border-color);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .task-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+
+    /* Estilos del Sidebar de Proyectos */
+    .sidebar-proyectos {
+        background-color: var(--board-bg);
+        border-right: 1px solid var(--border-color);
+        min-height: calc(100vh - 120px);
+        padding: 1.5rem 1rem;
+        border-radius: 10px;
+    }
+
+    /* Sobrescribir colores de los tabs para modo nocturno */
+    .nav-tabs {
+        border-bottom-color: var(--border-color);
+    }
+    .nav-tabs .nav-link {
+        color: var(--text-color);
+    }
+    .nav-tabs .nav-link.active {
+        background-color: var(--bg-color);
+        border-color: var(--border-color) var(--border-color) var(--bg-color);
+        color: var(--text-color);
+    }
+
+    /* Animaciones */
+    .fade-in {
+        animation: fadeIn 0.6s ease-out;
+    }
+
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(15px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+
+<div class="container-fluid fade-in mt-4">
+    <!-- Cabecera del Dashboard -->
+    <header class="d-flex justify-content-between align-items-center pb-3 mb-4 border-bottom" style="border-color: var(--border-color) !important;">
+        <div class="d-flex align-items-center gap-3">
+            <h2 class="mb-0 fw-bold">JiraClone</h2>
+            <span class="badge bg-primary rounded-pill">Sprint 1</span>
+            <button class="btn btn-sm btn-outline-primary rounded-pill" data-bs-toggle="modal" data-bs-target="#addSprintModal">Nuevo Sprint</button>
+        </div>
+        
+        <div class="d-flex align-items-center gap-3">
+            <button id="themeToggle" class="btn btn-outline-secondary rounded-circle" title="Modo Nocturno">
+                &#127183;
+            </button>
+            <!-- Perfil de Usuario con Foto -->
+            <div class="d-flex align-items-center gap-2">
+                <span>User Admin</span>
+                <img src="https://ui-avatars.com/api/?name=User+Admin&background=0D8ABC&color=fff" class="rounded-circle shadow-sm" width="45" height="45" alt="Perfil">
+            </div>
+        </div>
+    </header>
+
+    <div class="row">
+        <!-- Sidebar de Proyectos -->
+        <div class="col-lg-2 col-md-3 mb-4">
+            <div class="sidebar-proyectos">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="mb-0 fw-bold text-uppercase text-secondary">Proyectos</h6>
+                    <button class="btn btn-sm btn-primary rounded-circle" data-bs-toggle="modal" data-bs-target="#addProjectModal" title="Nuevo Proyecto" style="width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">+</button>
+                </div>
+                <div class="nav flex-column nav-pills" id="project-tabs" role="tablist" aria-orientation="vertical">
+                    <button class="nav-link active mb-2 fw-bold text-start" data-bs-toggle="pill" type="button" role="tab">Proyecto Alpha</button>
+                    <button class="nav-link mb-2 fw-bold text-start text-muted" data-bs-toggle="pill" type="button" role="tab" style="background-color: var(--card-bg); border: 1px solid var(--border-color);">Proyecto Beta</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contenido Principal -->
+        <div class="col-lg-10 col-md-9">
+            <!-- Navegación de Vistas -->
+            <ul class="nav nav-tabs mb-4" id="jiraTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active fw-bold" id="tablero-tab" data-bs-toggle="tab" data-bs-target="#tablero" type="button" role="tab" aria-controls="tablero" aria-selected="true">Tablero</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold" id="backlog-tab" data-bs-toggle="tab" data-bs-target="#backlog" type="button" role="tab" aria-controls="backlog" aria-selected="false">Backlog</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold" id="cronograma-tab" data-bs-toggle="tab" data-bs-target="#cronograma" type="button" role="tab" aria-controls="cronograma" aria-selected="false">Cronograma</button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="jiraTabContent">
+                <!-- VISTA: TABLERO KANBAN -->
+                <div class="tab-pane fade show active" id="tablero" role="tabpanel" aria-labelledby="tablero-tab">
+                    <div class="kanban-board">
+                        <div class="kanban-column">
+                            <h6 class="text-uppercase fw-bold mb-3 text-secondary">To Do <span class="badge bg-secondary ms-1" id="count-todo">0</span></h6>
+                            <div id="todoList"></div>
+                        </div>
+                        
+                        <div class="kanban-column">
+                            <h6 class="text-uppercase fw-bold mb-3 text-secondary">In Progress <span class="badge bg-primary ms-1" id="count-inprogress">0</span></h6>
+                            <div id="inProgressList"></div>
+                        </div>
+                        
+                        <div class="kanban-column">
+                            <h6 class="text-uppercase fw-bold mb-3 text-secondary">Done <span class="badge bg-success ms-1" id="count-done">0</span></h6>
+                            <div id="doneList"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VISTA: BACKLOG -->
+                <div class="tab-pane fade" id="backlog" role="tabpanel" aria-labelledby="backlog-tab">
+                    <div class="row mb-4">
+                        <div class="col d-flex gap-2">
+                            <button class="btn btn-primary fw-bold" data-bs-toggle="modal" data-bs-target="#addTaskModal">Añadir Tarea</button>
+                        </div>
+                    </div>
+                    
+                    <div class="card" style="background-color: var(--card-bg); border-color: var(--border-color);">
+                        <div class="card-header fw-bold" style="background-color: var(--board-bg); border-bottom-color: var(--border-color); color: var(--text-color);">
+                            Backlog General
+                        </div>
+                        <div class="card-body p-0">
+                            <ul class="list-group list-group-flush" id="backlogList">
+                                <!-- Items del backlog se cargarán aquí -->
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VISTA: CRONOGRAMA -->
+                <div class="tab-pane fade" id="cronograma" role="tabpanel" aria-labelledby="cronograma-tab">
+                    <div class="alert alert-info" role="alert" style="background-color: var(--card-bg); border-color: var(--border-color); color: var(--text-color);">
+                        <strong>Cronograma (Roadmap)</strong> - Aquí se visualizará el diagrama de Gantt de los Sprints.
+                    </div>
+                    <div class="d-flex align-items-center justify-content-center mt-4" style="height: 250px; background-color: var(--board-bg); border-radius: 8px; border: 1px dashed var(--border-color);">
+                        <span class="text-muted fw-bold">Próximamente: Gráfico de Cronograma</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: AÑADIR TAREA -->
+    <div class="modal fade" id="addTaskModal" tabindex="-1" aria-labelledby="addTaskModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content" style="background-color: var(--card-bg); color: var(--text-color);">
+                <div class="modal-header" style="border-bottom-color: var(--border-color);">
+                    <h5 class="modal-title fw-bold" id="addTaskModalLabel">Añadir Nueva Tarea</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="taskForm">
+                        <div class="mb-3">
+                            <label for="taskTitle" class="form-label">Nombre de la tarea</label>
+                            <input type="text" class="form-control" id="taskTitle" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="taskUser" class="form-label">Usuario Asignado</label>
+                            <select class="form-select" id="taskUser">
+                                <option value="User Admin">User Admin</option>
+                                <option value="User 2">User 2</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="taskType" class="form-label">Tipo de Tarea</label>
+                            <select class="form-select" id="taskType">
+                                <option value="Historia">Historia</option>
+                                <option value="Bug">Bug (Error)</option>
+                                <option value="Tarea">Tarea</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="taskStartDate" class="form-label">Fecha de Inicio</label>
+                                <input type="date" class="form-control" id="taskStartDate">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="taskEndDate" class="form-label">Fecha de Fin</label>
+                                <input type="date" class="form-control" id="taskEndDate">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer" style="border-top-color: var(--border-color);">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="addTask()">Guardar Tarea</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: AÑADIR PROYECTO -->
+    <div class="modal fade" id="addProjectModal" tabindex="-1" aria-labelledby="addProjectModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content" style="background-color: var(--card-bg); color: var(--text-color);">
+                <div class="modal-header" style="border-bottom-color: var(--border-color);">
+                    <h5 class="modal-title fw-bold" id="addProjectModalLabel">Crear Proyecto</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="projectForm">
+                        <div class="mb-3">
+                            <label for="projectName" class="form-label">Nombre del Proyecto</label>
+                            <input type="text" class="form-control" id="projectName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="projectDesc" class="form-label">Descripción</label>
+                            <textarea class="form-control" id="projectDesc" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer" style="border-top-color: var(--border-color);">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="addProject()">Crear Proyecto</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: AÑADIR SPRINT -->
+    <div class="modal fade" id="addSprintModal" tabindex="-1" aria-labelledby="addSprintModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content" style="background-color: var(--card-bg); color: var(--text-color);">
+                <div class="modal-header" style="border-bottom-color: var(--border-color);">
+                    <h5 class="modal-title fw-bold" id="addSprintModalLabel">Crear Sprint</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="sprintForm">
+                        <div class="mb-3">
+                            <label for="sprintName" class="form-label">Nombre del Sprint</label>
+                            <input type="text" class="form-control" id="sprintName" placeholder="Ej. Sprint 2" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="sprintStartDate" class="form-label">Fecha de Inicio</label>
+                                <input type="date" class="form-control" id="sprintStartDate">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="sprintEndDate" class="form-label">Fecha de Fin</label>
+                                <input type="date" class="form-control" id="sprintEndDate">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer" style="border-top-color: var(--border-color);">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="addSprint()">Crear Sprint</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<!-- Aseguramos que Bootstrap JS está cargado para que funcionen las pestañas -->
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+$(document).ready(function () {
+    loadTasks();
+    
+    // Lógica para el Modo Nocturno
+    const currentTheme = localStorage.getItem('theme') || 'light';
+    document.body.setAttribute('data-theme', currentTheme);
+    
+    $('#themeToggle').click(function() {
+        const theme = document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.body.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+    });
+});
+
+function loadTasks() {
+    $.get('/Task/GetTasks', function(tasks) {
+        $('#todoList, #inProgressList, #doneList, #backlogList').empty();
+        
+        let todo = 0, inprog = 0, done = 0;
+        
+        tasks.forEach(function(task) {
+            let card = `<div class="task-card shadow-sm fade-in">
+                            <div class="fw-bold">${task.title}</div>
+                            <small class="text-muted">TASK-${task.id || Math.floor(Math.random() * 1000)}</small>
+                        </div>`;
+                        
+            let listItem = `<li class="list-group-item d-flex justify-content-between align-items-center" style="background-color: var(--card-bg); color: var(--text-color); border-color: var(--border-color);">
+                                <div>
+                                    <span class="fw-bold me-2">TASK-${task.id || Math.floor(Math.random() * 1000)}</span>
+                                    <span>${task.title}</span>
+                                </div>
+                                <span class="badge bg-secondary rounded-pill">Status: ${task.status}</span>
+                            </li>`;
+
+            // Añadir al Backlog en formato de lista
+            $('#backlogList').append(listItem);
+                        
+            // Asumiendo que tu endpoint ahora retorna el Status (0=ToDo, 1=InProgress, etc.)
+            // Temporalmente colocamos todo en ToDo si no tiene estado
+            if(task.status === 1) {
+                $('#inProgressList').append(card);
+                inprog++;
+            } else if (task.status === 2 || task.status === 3) {
+                $('#doneList').append(card);
+                done++;
+            } else {
+                $('#todoList').append(card);
+                todo++;
+            }
+        });
+        
+        $('#count-todo').text(todo);
+        $('#count-inprogress').text(inprog);
+        $('#count-done').text(done);
+    });
+}
+
+function addTask() {
+    let title = $('#taskTitle').val();
+    let user = $('#taskUser').val();
+    let type = $('#taskType').val();
+    let startDate = $('#taskStartDate').val();
+    let endDate = $('#taskEndDate').val();
+    
+    if(!title) return;
+
+    $.post('/Task/AddTask', { 
+        title: title,
+        assignedUser: user,
+        taskType: type,
+        startDate: startDate,
+        endDate: endDate
+    }, function() {
+        loadTasks();
+        $('#taskForm')[0].reset();
+        
+        // Cerrar el modal
+        let modalElement = document.getElementById('addTaskModal');
+        let modalInstance = bootstrap.Modal.getInstance(modalElement);
+        if(modalInstance) modalInstance.hide();
+    });
+}
+
+function addProject() {
+    let name = $('#projectName').val();
+    if(!name) return;
+    
+    // Simulamos que se añade a la lista visualmente
+    $('#project-tabs').append(`<button class="nav-link mb-2 fw-bold text-start text-muted" data-bs-toggle="pill" type="button" role="tab" style="background-color: var(--card-bg); border: 1px solid var(--border-color);">${name}</button>`);
+    
+    $('#projectForm')[0].reset();
+    let modalInstance = bootstrap.Modal.getInstance(document.getElementById('addProjectModal'));
+    if(modalInstance) modalInstance.hide();
+}
+
+function addSprint() {
+    let name = $('#sprintName').val();
+    if(!name) return;
+    
+    $('#sprintForm')[0].reset();
+    let modalInstance = bootstrap.Modal.getInstance(document.getElementById('addSprintModal'));
+    if(modalInstance) modalInstance.hide();
+}
+</script>
