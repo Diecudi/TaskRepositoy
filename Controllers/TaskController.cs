@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using System;
 using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
 using Tasks.Data;
 using Tasks.Models;
 
@@ -11,10 +13,12 @@ namespace Tasks.Controllers
     public class TaskController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public TaskController(ApplicationDbContext context)
+        public TaskController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         public IActionResult Index()
@@ -36,23 +40,27 @@ namespace Tasks.Controllers
         }
 
         [HttpPost]
-        public IActionResult AddTask(string title, string assignedUser, string taskType, DateTime? startDate, DateTime? endDate)
+        public async Task<IActionResult> AddTask(string title, string assignedUser, string taskType, DateTime? startDate, DateTime? endDate)
         {
             if (!string.IsNullOrEmpty(title))
             {
+                // Identificamos al usuario que tiene la sesión abierta
+                var currentUser = await _userManager.GetUserAsync(User);
+
                 var newItem = new WorkItem
                 {
                     Title = title,
-                    Status = WorkItemStatus.ToDo, // Por defecto al tablero "To Do" (o Backlog)
-                    TaskType = taskType,
+                    Description = "", // Obligatorio en BD, lo enviamos vacío por defecto
+                    Status = WorkItemStatus.ToDo, 
+                    TaskType = taskType ?? "Tarea",
                     StartDate = startDate,
                     EndDate = endDate,
-                    Priority = "Media" // Prioridad por defecto
-                    // Nota: 'assignedUser' por ahora es texto, cuando integres bien Identity, guardaremos el 'AssignedUserId' real.
+                    Priority = "Media",
+                    AssignedUserId = currentUser.Id // <- ¡Aquí asociamos la tarea al usuario!
                 };
 
                 _context.WorkItems.Add(newItem);
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
             }
 
             return Ok();
