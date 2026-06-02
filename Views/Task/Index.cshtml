@@ -389,9 +389,10 @@ function addTask() {
         $('#taskForm')[0].reset();
         
         // Cerrar el modal
-        let modalElement = document.getElementById('addTaskModal');
-        let modalInstance = bootstrap.Modal.getInstance(modalElement);
-        if(modalInstance) modalInstance.hide();
+        $('#addTaskModal').modal('hide');
+        // Forzar la eliminación del fondo gris por si se queda atascado
+        $('.modal-backdrop').remove();
+        $('body').removeClass('modal-open').css('padding-right', '');
     });
 }
 
@@ -403,8 +404,9 @@ function addProject() {
     $('#project-tabs').append(`<button class="nav-link mb-2 fw-bold text-start text-muted" data-bs-toggle="pill" type="button" role="tab" style="background-color: var(--card-bg); border: 1px solid var(--border-color);">${name}</button>`);
     
     $('#projectForm')[0].reset();
-    let modalInstance = bootstrap.Modal.getInstance(document.getElementById('addProjectModal'));
-    if(modalInstance) modalInstance.hide();
+    $('#addProjectModal').modal('hide');
+    $('.modal-backdrop').remove();
+    $('body').removeClass('modal-open').css('padding-right', '');
 }
 
 function addSprint() {
@@ -412,7 +414,8 @@ function addSprint() {
     if(!name) return;
     
     $('#sprintForm')[0].reset();
-    let modalInstance = bootstrap.Modal.getInstance(document.getElementById('addSprintModal'));
-    if(modalInstance) modalInstance.hide();
+    $('#addSprintModal').modal('hide');
+    $('.modal-backdrop').remove();
+    $('body').removeClass('modal-open').css('padding-right', '');
 }
 </script>
