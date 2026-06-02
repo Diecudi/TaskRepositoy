@@ -47,7 +47,7 @@ using (var scope = app.Services.CreateScope())
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
-    dbContext.Database.EnsureCreated(); // Fuerza la creación de todas las tablas en MySQL leyendo los modelos
+    dbContext.Database.Migrate(); // Crea las tablas leyendo los archivos de la carpeta Migrations
 
     var adminExists = userManager.FindByEmailAsync("admin@jiraclone.com").Result;
     if (adminExists == null)
