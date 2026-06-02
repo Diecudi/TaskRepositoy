@@ -47,7 +47,7 @@ using (var scope = app.Services.CreateScope())
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
-    dbContext.Database.Migrate(); // Crea las tablas en Aiven automáticamente si no existen
+    dbContext.Database.EnsureCreated(); // Fuerza la creación de todas las tablas en MySQL leyendo los modelos
 
     var adminExists = userManager.FindByEmailAsync("admin@jiraclone.com").Result;
     if (adminExists == null)
