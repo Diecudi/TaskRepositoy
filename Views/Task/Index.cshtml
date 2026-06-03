@@ -31,15 +31,6 @@
         align-items: flex-start;
     }
 
-    .kanban-column {
-        background-color: var(--board-bg);
-        border-radius: 10px;
-        min-width: 320px;
-        max-width: 320px;
-        padding: 1rem;
-        border: 1px solid var(--border-color);
-    }
-
     .task-card {
         background-color: var(--card-bg);
         color: var(--text-color);
@@ -130,8 +121,7 @@
                     <button class="btn btn-sm btn-primary rounded-circle" data-bs-toggle="modal" data-bs-target="#addProjectModal" title="Nuevo Proyecto" style="width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">+</button>
                 </div>
                 <div class="nav flex-column nav-pills gap-2" id="project-tabs" role="tablist" aria-orientation="vertical">
-                    <button class="nav-link active mb-2 fw-bold text-start" data-bs-toggle="pill" type="button" role="tab">Proyecto Alpha</button>
-                    <button class="nav-link mb-2 fw-bold text-start text-muted" data-bs-toggle="pill" type="button" role="tab">Proyecto Beta</button>
+                    <!-- Proyectos dinámicos -->
                 </div>
             </div>
         </div>
@@ -154,21 +144,8 @@
             <div class="tab-content" id="jiraTabContent">
                 <!-- VISTA: TABLERO KANBAN -->
                 <div class="tab-pane fade show active" id="tablero" role="tabpanel" aria-labelledby="tablero-tab">
-                    <div class="kanban-board">
-                        <div class="kanban-column">
-                            <h6 class="text-uppercase fw-bold mb-3 text-secondary">To Do <span class="badge bg-secondary ms-1" id="count-todo">0</span></h6>
-                            <div id="todoList" style="min-height: 150px;"></div>
-                        </div>
-                        
-                        <div class="kanban-column">
-                            <h6 class="text-uppercase fw-bold mb-3 text-secondary">In Progress <span class="badge bg-primary ms-1" id="count-inprogress">0</span></h6>
-                            <div id="inProgressList" style="min-height: 150px;"></div>
-                        </div>
-                        
-                        <div class="kanban-column">
-                            <h6 class="text-uppercase fw-bold mb-3 text-secondary">Done <span class="badge bg-success ms-1" id="count-done">0</span></h6>
-                            <div id="doneList" style="min-height: 150px;"></div>
-                        </div>
+                    <div id="sprintsContainer">
+                        <!-- Swimlanes de los Sprints generados automáticamente -->
                     </div>
                 </div>
 
@@ -232,6 +209,12 @@
                                 <option value="Historia">Historia</option>
                                 <option value="Bug">Bug (Error)</option>
                                 <option value="Tarea">Tarea</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="taskSprint" class="form-label">Sprint (Opcional)</label>
+                            <select class="form-select" id="taskSprint">
+                                <option value="0">(Sin Sprint / Backlog)</option>
                             </select>
                         </div>
                         <div class="row">
@@ -324,8 +307,12 @@
 <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
+let currentProjectId = 0;
+
 $(document).ready(function () {
     loadTasks();
+    loadProjects();
+});
 
     // Inicializar SortableJS para arrastrar tarjetas
     const sortableOptions = {
@@ -362,12 +349,41 @@ $(document).ready(function () {
         
         // Simular que recargamos el entorno al cambiar de proyecto
         loadTasks();
+function loadProjects() {
+    $.get('/Task/GetProjects', function(projects) {
+        $('#project-tabs').empty();
+        if(projects.length > 0) {
+            projects.forEach((p, index) => {
+                let isActive = index === 0 ? 'active' : 'text-muted';
+                $('#project-tabs').append(`<button class="nav-link mb-2 fw-bold text-start ${isActive}" data-bs-toggle="pill" type="button" role="tab" onclick="selectProject(${p.id})">${p.name}</button>`);
+            });
+            selectProject(projects[0].id);
+        } else {
+            $('#sprintsContainer').html('<div class="text-center mt-5 text-muted">No hay proyectos. Crea uno primero.</div>');
+            $('#project-tabs').append('<span class="text-muted small">Sin proyectos</span>');
+            currentProjectId = 0;
+        }
     });
 });
+}
 
 function loadTasks() {
     $.get('/Task/GetTasks', function(tasks) {
         $('#todoList, #inProgressList, #doneList, #backlogList').empty();
+function selectProject(id) {
+    currentProjectId = id;
+    $('#project-tabs button').removeClass('active').addClass('text-muted');
+    $(`#project-tabs button[onclick="selectProject(${id})"]`).addClass('active').removeClass('text-muted');
+    loadDashboard();
+}
+
+function loadDashboard() {
+    if(currentProjectId === 0) return;
+    
+    $.get('/Task/GetSprints?projectId=' + currentProjectId, function(sprints) {
+        let sprintSelect = $('#taskSprint');
+        sprintSelect.empty();
+        sprintSelect.append('<option value="0">(Sin Sprint / Backlog)</option>');
         
         let todo = 0, inprog = 0, done = 0;
         
@@ -400,11 +416,37 @@ function loadTasks() {
                 $('#todoList').append(card);
                 todo++;
             }
+        let container = $('#sprintsContainer');
+        container.empty();
+
+        // 1. Crear Swimlanes por Sprint
+        sprints.forEach(s => {
+            sprintSelect.append(`<option value="${s.id}">${s.name}</option>`);
+            container.append(createSwimlaneHtml(s.id, s.name, s.startDate, s.endDate));
         });
         
         $('#count-todo').text(todo);
         $('#count-inprogress').text(inprog);
         $('#count-done').text(done);
+        // 2. Crear Swimlane para el Backlog (Tareas sin Sprint)
+        container.append(createSwimlaneHtml(0, 'Backlog General', '', ''));
+
+        // 3. Cargar Tareas
+        $.get('/Task/GetTasks?projectId=' + currentProjectId, function(tasks) {
+            $('#backlogList').empty();
+
+            tasks.forEach(task => {
+                let sId = task.sprintId || 0;
+                let card = `<div class="task-card shadow-sm fade-in" data-id="${task.id}"><div class="fw-bold">${task.title}</div><small class="text-muted">TASK-${task.id}</small></div>`;
+                
+                if(task.status === 1) $(`#inProgressList_${sId}`).append(card);
+                else if (task.status === 2) $(`#doneList_${sId}`).append(card);
+                else $(`#todoList_${sId}`).append(card);
+
+                $('#backlogList').append(`<li class="list-group-item d-flex justify-content-between align-items-center" style="background-color: var(--card-bg); color: var(--text-color); border-color: var(--border-color);"><div><span class="fw-bold me-2">TASK-${task.id}</span><span>${task.title}</span></div><span class="badge bg-secondary rounded-pill">Status: ${task.status}</span></li>`);
+            });
+            initSortable();
+        });
     });
 }
 
@@ -412,14 +454,54 @@ function updateCounts() {
     $('#count-todo').text($('#todoList').children().length);
     $('#count-inprogress').text($('#inProgressList').children().length);
     $('#count-done').text($('#doneList').children().length);
+function createSwimlaneHtml(sprintId, name, start, end) {
+    let dates = start ? `<span class="badge bg-info text-dark ms-2 fw-normal">${start} - ${end}</span>` : '';
+    return `
+    <div class="sprint-swimlane mb-5 p-3 rounded shadow-sm" style="background-color: var(--board-bg); border: 1px solid var(--border-color);">
+        <h5 class="fw-bold text-primary mb-3 pb-2 border-bottom" style="border-color: var(--border-color) !important;">${name} ${dates}</h5>
+        <div class="d-flex gap-3 overflow-x-auto">
+            <div class="flex-fill" style="min-width: 250px;">
+                <h6 class="text-uppercase fw-bold text-secondary mb-2">To Do</h6>
+                <div id="todoList_${sprintId}" class="task-list sortable-list rounded p-2" data-status="0" data-sprint-id="${sprintId}" style="min-height: 120px; background-color: var(--card-bg); border: 1px dashed var(--border-color);"></div>
+            </div>
+            <div class="flex-fill" style="min-width: 250px;">
+                <h6 class="text-uppercase fw-bold text-secondary mb-2">In Progress</h6>
+                <div id="inProgressList_${sprintId}" class="task-list sortable-list rounded p-2" data-status="1" data-sprint-id="${sprintId}" style="min-height: 120px; background-color: var(--card-bg); border: 1px dashed var(--border-color);"></div>
+            </div>
+            <div class="flex-fill" style="min-width: 250px;">
+                <h6 class="text-uppercase fw-bold text-secondary mb-2">Done</h6>
+                <div id="doneList_${sprintId}" class="task-list sortable-list rounded p-2" data-status="2" data-sprint-id="${sprintId}" style="min-height: 120px; background-color: var(--card-bg); border: 1px dashed var(--border-color);"></div>
+            </div>
+        </div>
+    </div>`;
+}
+
+function initSortable() {
+    const sortableOptions = {
+        group: 'kanban',
+        animation: 150,
+        ghostClass: 'opacity-50',
+        onEnd: function (evt) {
+            const taskId = evt.item.getAttribute('data-id');
+            const newStatus = evt.to.getAttribute('data-status');
+            const newSprintId = evt.to.getAttribute('data-sprint-id');
+
+            if (taskId) {
+                $.post('/Task/UpdateTaskStatus', { id: taskId, status: newStatus, sprintId: newSprintId });
+            }
+        }
+    };
+    $('.sortable-list').each(function() { new Sortable(this, sortableOptions); });
 }
 
 function addTask() {
+    if(currentProjectId === 0) return alert('Debes seleccionar un proyecto primero');
     let title = $('#taskTitle').val();
     let user = $('#taskUser').val();
     let type = $('#taskType').val();
     let startDate = $('#taskStartDate').val();
     let endDate = $('#taskEndDate').val();
+    let sprintId = $('#taskSprint').val();
     
     if(!title) return;
 
@@ -429,20 +511,24 @@ function addTask() {
         taskType: type,
         startDate: startDate,
         endDate: endDate
+        endDate: endDate,
+        projectId: currentProjectId,
+        sprintId: sprintId
     }, function() {
         loadTasks();
         $('#taskForm')[0].reset();
         
         // Cerrar el modal
         $('#addTaskModal').modal('hide');
-        // Forzar la eliminación del fondo gris por si se queda atascado
         $('.modal-backdrop').remove();
         $('body').removeClass('modal-open').css('padding-right', '');
+        loadDashboard();
     });
 }
 
 function addProject() {
     let name = $('#projectName').val();
+    let desc = $('#projectDesc').val();
     if(!name) return;
     
     // Simulamos que se añade a la lista visualmente
@@ -452,15 +538,33 @@ function addProject() {
     $('#addProjectModal').modal('hide');
     $('.modal-backdrop').remove();
     $('body').removeClass('modal-open').css('padding-right', '');
+    $.post('/Task/AddProject', { name: name, description: desc }, function() {
+        $('#projectForm')[0].reset();
+        $('#addProjectModal').modal('hide');
+        $('.modal-backdrop').remove();
+        $('body').removeClass('modal-open').css('padding-right', '');
+        loadProjects();
+    });
 }
 
 function addSprint() {
+    if(currentProjectId === 0) return alert('Debes seleccionar un proyecto primero');
     let name = $('#sprintName').val();
     if(!name) return;
+    let start = $('#sprintStartDate').val();
+    let end = $('#sprintEndDate').val();
+    if(!name || !start || !end) return;
     
     $('#sprintForm')[0].reset();
     $('#addSprintModal').modal('hide');
     $('.modal-backdrop').remove();
     $('body').removeClass('modal-open').css('padding-right', '');
+    $.post('/Task/AddSprint', { name: name, startDate: start, endDate: end, projectId: currentProjectId }, function() {
+        $('#sprintForm')[0].reset();
+        $('#addSprintModal').modal('hide');
+        $('.modal-backdrop').remove();
+        $('body').removeClass('modal-open').css('padding-right', '');
+        loadDashboard();
+    });
 }
 </script>
