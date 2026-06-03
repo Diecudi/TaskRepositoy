@@ -6,7 +6,6 @@
         --card-bg: #ffffff;
         --board-bg: #ebecf0;
         --border-color: #dfe1e6;
-        --card-text: #1a1a1a;
     }
 
     [data-theme="dark"] {
@@ -15,7 +14,6 @@
         --card-bg: #22272b;
         --board-bg: #161a1d;
         --border-color: #3b4045;
-        --card-text: #ffffff;
     }
 
     body {
@@ -39,69 +37,24 @@
         min-width: 320px;
         max-width: 320px;
         padding: 1rem;
-        border: 2px solid var(--border-color);
         border: 1px solid var(--border-color);
     }
 
-    /* MEJORADOS: Estilos de Tarjetas */
     .task-card {
         background-color: var(--card-bg);
-        color: var(--card-text);
-        padding: 12px 14px;
-        border-radius: 6px;
         color: var(--text-color);
         padding: 15px;
         border-radius: 8px;
         margin-bottom: 12px;
         cursor: grab;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08);
-        border: 1.5px solid var(--border-color);
-        transition: all 0.2s ease;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
         box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         border: 1px solid var(--border-color);
         transition: transform 0.2s, box-shadow 0.2s;
     }
 
     .task-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.18), 0 2px 4px rgba(0,0,0,0.12);
-        border-color: #0d6efd;
         transform: translateY(-4px);
         box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-    }
-
-    .task-card .fw-bold {
-        color: var(--card-text) !important;
-        font-size: 0.95rem;
-        line-height: 1.3;
-    }
-
-    .task-card .small {
-        color: var(--card-text) !important;
-        opacity: 0.85;
-        font-size: 0.75rem;
-    }
-
-    .task-card .status-badge {
-        font-size: 0.70rem;
-        padding: 4px 8px;
-        white-space: nowrap;
-        color: #ffffff !important;
-    }
-
-    .task-card .badge {
-        color: var(--card-text) !important;
-        border-color: var(--border-color) !important;
-        background-color: rgba(0,0,0,0.05) !important;
-        font-size: 0.70rem;
-        padding: 4px 6px;
-    }
-
-    [data-theme="dark"] .task-card .badge {
-        background-color: rgba(255,255,255,0.08) !important;
     }
 
     /* Estilos del Sidebar de Proyectos */
@@ -124,20 +77,6 @@
         background-color: var(--bg-color);
         border-color: var(--border-color) var(--border-color) var(--bg-color);
         color: var(--text-color);
-    }
-
-    /* Swimlanes mejoradas */
-    .sprint-swimlane {
-        border: 1.5px solid var(--border-color) !important;
-    }
-
-    .sprint-swimlane h5 {
-        color: var(--text-color) !important;
-    }
-
-    .sprint-swimlane .task-list {
-        background-color: var(--card-bg) !important;
-        border: 1.5px dashed var(--border-color) !important;
     }
 
     /* Animaciones */
@@ -197,31 +136,13 @@
                 <li class="nav-item" role="presentation">
                     <button class="nav-link fw-bold" id="backlog-tab" data-bs-toggle="tab" data-bs-target="#backlog" type="button" role="tab" aria-controls="backlog" aria-selected="false">Backlog</button>
                 </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link fw-bold" id="cronograma-tab" data-bs-toggle="tab" data-bs-target="#cronograma" type="button" role="tab" aria-controls="cronograma" aria-selected="false">Cronograma</button>
-                </li>
             </ul>
 
             <div class="tab-content" id="jiraTabContent">
                 <!-- VISTA: TABLERO KANBAN -->
                 <div class="tab-pane fade show active" id="tablero" role="tabpanel" aria-labelledby="tablero-tab">
                     <div id="sprintsContainer">
-                        <!-- Los Swimlanes se generarán aquí dinámicamente con Javascript -->
-                    <div class="kanban-board">
-                        <div class="kanban-column">
-                            <h6 class="text-uppercase fw-bold mb-3 text-secondary">To Do <span class="badge bg-secondary ms-1" id="count-todo">0</span></h6>
-                            <div id="todoList"></div>
-                        </div>
-                        
-                        <div class="kanban-column">
-                            <h6 class="text-uppercase fw-bold mb-3 text-secondary">In Progress <span class="badge bg-primary ms-1" id="count-inprogress">0</span></h6>
-                            <div id="inProgressList"></div>
-                        </div>
-                        
-                        <div class="kanban-column">
-                            <h6 class="text-uppercase fw-bold mb-3 text-secondary">Done <span class="badge bg-success ms-1" id="count-done">0</span></h6>
-                            <div id="doneList"></div>
-                        </div>
+                        <!-- Los sprints y sus tareas se cargarán aquí de forma dinámica -->
                     </div>
                 </div>
 
@@ -244,13 +165,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- VISTA: CRONOGRAMA -->
-                <div class="tab-pane fade" id="cronograma" role="tabpanel" aria-labelledby="cronograma-tab">
-                    <div class="alert alert-info" role="alert" style="background-color: var(--card-bg); border-color: var(--border-color); color: var(--text-color);">
-                        <strong>Cronograma (Roadmap)</strong> - Aquí se visualizará el diagrama de Gantt de los Sprints.
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -270,12 +184,6 @@
                             <input type="text" class="form-control" id="taskTitle" required>
                         </div>
                         <div class="mb-3">
-                            <label for="taskSprint" class="form-label">Sprint</label>
-                            <select class="form-select" id="taskSprint">
-                                <option value="0">(Sin Sprint / Backlog)</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
                             <label for="taskUser" class="form-label">Usuario Asignado</label>
                             <select class="form-select" id="taskUser">
                                 <option value="User Admin">User Admin</option>
@@ -289,6 +197,10 @@
                                 <option value="Bug">Bug (Error)</option>
                                 <option value="Tarea">Tarea</option>
                             </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="taskSprint" class="form-label">Sprint</label>
+                            <select class="form-select" id="taskSprint"></select>
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
@@ -371,62 +283,12 @@
             </div>
         </div>
     </div>
-
-    <!-- MODAL: EDITAR / ELIMINAR TAREA -->
-    <div class="modal fade" id="editTaskModal" tabindex="-1" aria-labelledby="editTaskModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content" style="background-color: var(--card-bg); color: var(--text-color);">
-                <div class="modal-header" style="border-bottom-color: var(--border-color);">
-                    <h5 class="modal-title fw-bold" id="editTaskModalLabel">Editar Tarea</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="editTaskForm">
-                        <input type="hidden" id="editTaskId">
-                        <div class="mb-3">
-                            <label for="editTaskTitle" class="form-label">Nombre de la tarea</label>
-                            <input type="text" class="form-control" id="editTaskTitle" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="editTaskSprint" class="form-label">Sprint</label>
-                            <select class="form-select" id="editTaskSprint"></select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="editTaskType" class="form-label">Tipo de Tarea</label>
-                            <select class="form-select" id="editTaskType">
-                                <option value="Historia">Historia</option>
-                                <option value="Bug">Bug (Error)</option>
-                                <option value="Tarea">Tarea</option>
-                            </select>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="editTaskStartDate" class="form-label">Fecha de Inicio</label>
-                                <input type="date" class="form-control" id="editTaskStartDate">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="editTaskEndDate" class="form-label">Fecha de Fin</label>
-                                <input type="date" class="form-control" id="editTaskEndDate">
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer d-flex justify-content-between" style="border-top-color: var(--border-color);">
-                    <button type="button" class="btn btn-danger" onclick="deleteTask()">Eliminar Tarea</button>
-                    <div>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="button" class="btn btn-primary" onclick="updateTask()">Guardar Cambios</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 
 </div>
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<!-- SortableJS JS -->
+<!-- SortableJS -->
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 <!-- Aseguramos que Bootstrap JS está cargado para que funcionen las pestañas -->
 <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
@@ -446,24 +308,12 @@ $(document).ready(function () {
         }
     });
 
-    // Verificar conexión a la base de datos
-    $.get('/Task/HealthCheck', function(health) {
-        console.log('Database Health:', health);
-        if (health.status !== 'OK') {
-            console.error('Database Connection Error:', health.error);
-            $('#sprintsContainer').html('<div class="alert alert-danger">⚠️ Error de conexión a la base de datos. Contacta al administrador.</div>');
-            return;
-        }
-    }).fail(function(err) {
-        console.error('HealthCheck failed:', err);
-    });
-
     loadProjects();
+
 });
 
 function loadProjects() {
     $.get('/Task/GetProjects', function(projects) {
-        console.log('🏗️ Proyectos cargados:', projects);
         $('#project-tabs').empty();
         if(projects.length > 0) {
             projects.forEach((p, index) => {
@@ -472,20 +322,16 @@ function loadProjects() {
             });
             selectProject(projects[0].id);
         } else {
-            console.warn('⚠️ No hay proyectos');
             $('#sprintsContainer').html('<div class="text-center mt-5 text-muted">No hay proyectos. Crea uno primero.</div>');
             $('#project-tabs').append('<span class="text-muted small">Sin proyectos</span>');
             currentProjectId = 0;
         }
-    }).fail(function(err) {
-        console.error('❌ Error al cargar proyectos:', err);
     });
 }
 
 function selectProject(id) {
     if (currentProjectId === id) return; // Evitar recargar el mismo proyecto si ya está activo
     currentProjectId = id;
-    console.log('✅ Proyecto seleccionado:', id);
     
     // Bloquear botones y mostrar pantalla de carga
     $('#project-tabs button').removeClass('active').addClass('text-muted').prop('disabled', true);
@@ -501,7 +347,6 @@ function loadDashboard() {
     if(currentProjectId === 0) return;
     
     $.get('/Task/GetSprints?projectId=' + currentProjectId, function(sprints) {
-        console.log('📋 Sprints cargados:', sprints);
         let sprintSelect = $('#taskSprint');
         sprintSelect.empty();
         sprintSelect.append('<option value="0">(Sin Sprint / Backlog)</option>');
@@ -510,7 +355,6 @@ function loadDashboard() {
         container.empty();
 
         sprints.forEach(s => {
-            console.log('➕ Agregando sprint:', s.name);
             sprintSelect.append(`<option value="${s.id}">${s.name}</option>`);
             container.append(createSwimlaneHtml(s.id, s.name, s.startDate, s.endDate));
         });
@@ -519,127 +363,42 @@ function loadDashboard() {
         container.append(createSwimlaneHtml(0, 'Backlog General', '', ''));
 
         $.get('/Task/GetTasks?projectId=' + currentProjectId, function(tasks) {
-            console.log('✅ Tareas recibidas:', tasks);
             $('#backlogList').empty();
 
-            // Si es un error, mostrar el mensaje
-            if (tasks.error) {
-                console.error('❌ Error en GetTasks:', tasks.error);
-                $('#sprintsContainer').append(`<div class="alert alert-danger mt-3">⚠️ Error: ${tasks.error}</div>`);
-                initSortable();
-                $('#project-tabs button').prop('disabled', false);
-                return;
-            }
-
-            if (!Array.isArray(tasks)) {
-                console.error('❌ Respuesta no es un array:', tasks);
-                $('#sprintsContainer').append('<div class="alert alert-danger mt-3">Error: La respuesta del servidor no es válida</div>');
-                initSortable();
-                $('#project-tabs button').prop('disabled', false);
-                return;
-            }
-
-            if (tasks.length === 0) {
-                console.warn('⚠️ No hay tareas para este proyecto');
-                $('#sprintsContainer').append('<div class="alert alert-info mt-3">No hay tareas aún. Crea una para comenzar.</div>');
-                initSortable();
-                $('#project-tabs button').prop('disabled', false);
-                return;
-            }
-
             tasks.forEach(task => {
-                console.log('📌 Procesando tarea:', task);
                 let sId = task.sprintId || 0;
-
-                // 1. Generación de la insignia de estado mejorada
-                let statusBadge = '';
-                let statusColor = 'bg-secondary';
-                let statusText = 'To Do';
-                
-                if(task.status == 1) {
-                    statusColor = 'bg-primary';
-                    statusText = 'In Progress';
-                } else if(task.status == 2) {
-                    statusColor = 'bg-success';
-                    statusText = 'Done';
-                }
-                statusBadge = `<span class="status-badge badge ${statusColor}">${statusText}</span>`;
-
                 let card = `
-                <div class="task-card shadow-sm fade-in" style="cursor: pointer;"
-                     data-id="${task.id}" 
-                     data-title="${task.title}" 
-                     data-user="${task.assignedUser}" 
-                     data-type="${task.taskType || 'Tarea'}" 
-                     data-start="${task.startDate || ''}" 
-                     data-end="${task.endDate || ''}"
-                     data-sprint="${task.sprintId || 0}"
-                     onclick="openEditTaskModal(this)">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
-                        <div class="fw-bold text-wrap text-break" style="flex: 1; color: var(--card-text); word-break: break-word;">${task.title}</div>
-                        ${statusBadge}
                 <div class="task-card shadow-sm fade-in" data-id="${task.id}">
                     <div class="fw-bold text-wrap text-break">${task.title}</div>
                     <div class="small text-muted mb-2">TASK-${task.id}</div>
                     <div class="d-flex justify-content-between align-items-center mt-2">
                         <span class="badge bg-light text-dark border text-truncate" style="max-width: 100%;" title="${task.assignedUser}">👤 ${task.assignedUser}</span>
                     </div>
-                    <div class="small" style="color: var(--card-text); opacity: 0.7; font-size: 0.75rem;">TASK-${task.id}</div>
-                    <div style="display: flex; justify-content: flex-start; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 6px;">
-                        <span class="badge" style="color: var(--card-text); border-color: var(--border-color) !important; background-color: rgba(0,0,0,0.05); max-width: 100%; text-overflow: ellipsis; overflow: hidden; font-size: 0.70rem;" title="${task.assignedUser}">👤 ${task.assignedUser}</span>
-                    </div>
-                    ${task.startDate ? `<div style="font-size: 0.70rem; color: var(--card-text); opacity: 0.8; margin-top: 6px;">📅 ${task.startDate}${task.endDate ? ` - ${task.endDate}` : ''}</div>` : ''}
                     ${task.startDate && task.endDate ? `<div class="text-muted mt-1" style="font-size: 0.70rem;">📅 ${task.startDate} - ${task.endDate}</div>` : ''}
                 </div>`;
                 
-                // Verificar que exista el contenedor antes de agregar
-                let todoList = $(`#todoList_${sId}`);
-                let inProgressList = $(`#inProgressList_${sId}`);
-                let doneList = $(`#doneList_${sId}`);
                 if(task.status === 1) $(`#inProgressList_${sId}`).append(card);
                 else if (task.status === 2) $(`#doneList_${sId}`).append(card);
                 else $(`#todoList_${sId}`).append(card);
 
-                if(task.status === 1) {
-                    if(inProgressList.length) inProgressList.append(card);
-                    else console.warn('⚠️ No encontrado: #inProgressList_' + sId);
-                }
-                else if (task.status === 2) {
-                    if(doneList.length) doneList.append(card);
-                    else console.warn('⚠️ No encontrado: #doneList_' + sId);
-                }
-                else {
-                    if(todoList.length) todoList.append(card);
-                    else console.warn('⚠️ No encontrado: #todoList_' + sId);
-                }
-
                 // Agregar a la lista de la pestaña Backlog
-                let statusTextBacklog = ['To Do', 'In Progress', 'Done'][task.status] || 'To Do';
                 let statusText = ['To Do', 'In Progress', 'Done'][task.status] || 'To Do';
                 $('#backlogList').append(`
-                    <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2" style="background-color: var(--card-bg); color: var(--card-text); border-color: var(--border-color);">
                     <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2" style="background-color: var(--card-bg); color: var(--text-color); border-color: var(--border-color);">
                         <div class="d-flex flex-column">
                             <div><span class="fw-bold me-2">TASK-${task.id}</span><span class="fw-bold">${task.title}</span></div>
-                            <div class="small mt-1" style="color: var(--card-text); opacity: 0.8;">
                             <div class="small text-muted mt-1">
                                 <span class="me-3">👤 ${task.assignedUser}</span>
-                                ${task.startDate && task.endDate ? `<span>📅 ${task.startDate} - ${task.endDate}</span>` : task.startDate ? `<span>📅 ${task.startDate}</span>` : ''}
                                 ${task.startDate && task.endDate ? `<span>📅 ${task.startDate} - ${task.endDate}</span>` : ''}
                             </div>
                         </div>
-                        <span class="badge bg-secondary rounded-pill">${statusTextBacklog}</span>
                         <span class="badge bg-secondary rounded-pill">${statusText}</span>
                     </li>`);
             });
-
             initSortable();
             $('#project-tabs button').prop('disabled', false); // Desbloquear botones al finalizar
-        }).fail(function(err) {
-            console.error('❌ Error al cargar tareas:', err);
         }).fail(function() {
             $('#project-tabs button').prop('disabled', false);
-            $('#sprintsContainer').html('<div class="text-center mt-5 text-danger">❌ Error al cargar tareas. Intenta recargar la página.</div>');
             $('#sprintsContainer').html('<div class="text-center mt-5 text-danger">Error al cargar tareas. Intenta recargar la página.</div>');
         });
     }).fail(function() {
@@ -679,19 +438,6 @@ function initSortable() {
             const taskId = evt.item.getAttribute('data-id');
             const newStatus = evt.to.getAttribute('data-status');
             const newSprintId = evt.to.getAttribute('data-sprint-id');
-
-            // 3. Este bloque cambia el cuadro en tiempo real al soltar la tarjeta
-            let badge = $(evt.item).find('.status-badge');
-            if (badge.length > 0) {
-                badge.removeClass('bg-secondary bg-primary bg-success');
-                if (newStatus == '1') {
-                    badge.addClass('bg-primary').text('In Progress');
-                } else if (newStatus == '2') {
-                    badge.addClass('bg-success').text('Done');
-                } else {
-                    badge.addClass('bg-secondary').text('To Do');
-                }
-            }
 
             if (taskId) {
                 $.post('/Task/UpdateTaskStatus', { id: taskId, status: newStatus, sprintId: newSprintId });
@@ -758,77 +504,4 @@ function addSprint() {
         loadDashboard();
     });
 }
-
-function openEditTaskModal(element) {
-    let card = $(element);
-    $('#editTaskId').val(card.data('id'));
-    $('#editTaskTitle').val(card.data('title'));
-    $('#editTaskUser').val(card.data('user'));
-    $('#editTaskType').val(card.data('type'));
-    
-    // Formatear fecha para el control input type="date"
-    let start = card.data('start') || '';
-    if (start.includes('/')) $('#editTaskStartDate').val(start.split('/').reverse().join('-'));
-    else $('#editTaskStartDate').val(start);
-    
-    let end = card.data('end') || '';
-    if (end.includes('/')) $('#editTaskEndDate').val(end.split('/').reverse().join('-'));
-    else $('#editTaskEndDate').val(end);
-
-    $('#editTaskSprint').html($('#taskSprint').html()); // Copiar opciones del modal de añadir
-    $('#editTaskSprint').val(card.data('sprint') || 0);
-
-    $('#editTaskModal').modal('show');
-}
-
-function updateTask() {
-    let id = $('#editTaskId').val();
-    let title = $('#editTaskTitle').val();
-    if(!title) return;
-
-    $.post('/Task/UpdateTask', { 
-        id: id,
-        title: title,
-        assignedUser: $('#editTaskUser').val(),
-        taskType: $('#editTaskType').val(),
-        startDate: $('#editTaskStartDate').val(),
-        endDate: $('#editTaskEndDate').val(),
-        sprintId: $('#editTaskSprint').val()
-    }, function() {
-        $('#editTaskModal').modal('hide');
-        $('.modal-backdrop').remove();
-        $('body').removeClass('modal-open').css('padding-right', '');
-        loadDashboard();
-    });
-}
-
-function deleteTask() {
-    if(confirm("¿Estás seguro de que deseas eliminar esta tarea permanentemente?")) {
-        $.post('/Task/DeleteTask', { id: $('#editTaskId').val() }, function() {
-            $('#editTaskModal').modal('hide');
-            $('.modal-backdrop').remove();
-            $('body').removeClass('modal-open').css('padding-right', '');
-            loadDashboard();
-        });
-    }
-}
-
-// Cambio de tema
-$(document).ready(function() {
-    const themeToggle = document.getElementById('themeToggle');
-    const htmlElement = document.documentElement;
-    
-    // Cargar tema guardado
-    let savedTheme = localStorage.getItem('theme') || 'light';
-    htmlElement.setAttribute('data-theme', savedTheme);
-    
-    if (themeToggle) {
-        themeToggle.addEventListener('click', function() {
-            let currentTheme = htmlElement.getAttribute('data-theme');
-            let newTheme = currentTheme === 'light' ? 'dark' : 'light';
-            htmlElement.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-        });
-    }
-});
 </script>
