@@ -181,5 +181,37 @@ namespace Tasks.Controllers
             }
             return NotFound();
         }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateTask(int id, string title, string taskType, DateTime? startDate, DateTime? endDate, int? sprintId)
+        {
+            var task = await _context.WorkItems.FindAsync(id);
+            if (task != null)
+            {
+                task.Title = title;
+                task.TaskType = taskType ?? "Tarea";
+                task.StartDate = startDate;
+                task.EndDate = endDate;
+                if (sprintId.HasValue) {
+                    task.SprintId = sprintId.Value == 0 ? null : sprintId.Value;
+                }
+                await _context.SaveChangesAsync();
+                return Ok();
+            }
+            return NotFound();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteTask(int id)
+        {
+            var task = await _context.WorkItems.FindAsync(id);
+            if (task != null)
+            {
+                _context.WorkItems.Remove(task);
+                await _context.SaveChangesAsync();
+                return Ok();
+            }
+            return NotFound();
+        }
     }
 }

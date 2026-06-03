@@ -284,21 +284,8 @@
             <div class="tab-content" id="jiraTabContent">
                 <!-- VISTA: TABLERO KANBAN -->
                 <div class="tab-pane fade show active" id="tablero" role="tabpanel" aria-labelledby="tablero-tab">
-                    <div class="kanban-board">
-                        <div class="kanban-column">
-                            <h6 class="text-uppercase fw-bold mb-3 text-secondary">To Do <span class="badge bg-secondary ms-1" id="count-todo">0</span></h6>
-                            <div id="todoList"></div>
-                        </div>
-                        
-                        <div class="kanban-column">
-                            <h6 class="text-uppercase fw-bold mb-3 text-secondary">In Progress <span class="badge bg-primary ms-1" id="count-inprogress">0</span></h6>
-                            <div id="inProgressList"></div>
-                        </div>
-                        
-                        <div class="kanban-column">
-                            <h6 class="text-uppercase fw-bold mb-3 text-secondary">Done <span class="badge bg-success ms-1" id="count-done">0</span></h6>
-                            <div id="doneList"></div>
-                        </div>
+                    <div id="sprintsContainer">
+                        <!-- Los Swimlanes se generarán aquí dinámicamente con Javascript -->
                     </div>
                 </div>
 
@@ -446,6 +433,56 @@
                 <div class="modal-footer" style="border-top-color: var(--border-color);">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-primary" onclick="addSprint()">Crear Sprint</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: EDITAR / ELIMINAR TAREA -->
+    <div class="modal fade" id="editTaskModal" tabindex="-1" aria-labelledby="editTaskModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content" style="background-color: var(--card-bg); color: var(--text-color);">
+                <div class="modal-header" style="border-bottom-color: var(--border-color);">
+                    <h5 class="modal-title fw-bold" id="editTaskModalLabel">Editar Tarea</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editTaskForm">
+                        <input type="hidden" id="editTaskId">
+                        <div class="mb-3">
+                            <label for="editTaskTitle" class="form-label">Nombre de la tarea</label>
+                            <input type="text" class="form-control" id="editTaskTitle" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editTaskSprint" class="form-label">Sprint</label>
+                            <select class="form-select" id="editTaskSprint"></select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editTaskType" class="form-label">Tipo de Tarea</label>
+                            <select class="form-select" id="editTaskType">
+                                <option value="Historia">Historia</option>
+                                <option value="Bug">Bug (Error)</option>
+                                <option value="Tarea">Tarea</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editTaskStartDate" class="form-label">Fecha de Inicio</label>
+                                <input type="date" class="form-control" id="editTaskStartDate">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editTaskEndDate" class="form-label">Fecha de Fin</label>
+                                <input type="date" class="form-control" id="editTaskEndDate">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer d-flex justify-content-between" style="border-top-color: var(--border-color);">
+                    <button type="button" class="btn btn-danger" onclick="deleteTask()">Eliminar Tarea</button>
+                    <div>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-primary" onclick="updateTask()">Guardar Cambios</button>
+                    </div>
                 </div>
             </div>
         </div>
