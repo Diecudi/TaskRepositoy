@@ -6,6 +6,7 @@
         --card-bg: #ffffff;
         --board-bg: #ebecf0;
         --border-color: #dfe1e6;
+        --card-text: #1a1a1a;
     }
 
     [data-theme="dark"] {
@@ -14,6 +15,7 @@
         --card-bg: #22272b;
         --board-bg: #161a1d;
         --border-color: #3b4045;
+        --card-text: #ffffff;
     }
 
     body {
@@ -37,24 +39,60 @@
         min-width: 320px;
         max-width: 320px;
         padding: 1rem;
-        border: 1px solid var(--border-color);
+        border: 2px solid var(--border-color);
     }
 
+    /* MEJORADOS: Estilos de Tarjetas */
     .task-card {
         background-color: var(--card-bg);
-        color: var(--text-color);
-        padding: 15px;
-        border-radius: 8px;
+        color: var(--card-text);
+        padding: 12px 14px;
+        border-radius: 6px;
         margin-bottom: 12px;
         cursor: grab;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-        border: 1px solid var(--border-color);
-        transition: transform 0.2s, box-shadow 0.2s;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08);
+        border: 1.5px solid var(--border-color);
+        transition: all 0.2s ease;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
     }
 
     .task-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        transform: translateY(-3px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.18), 0 2px 4px rgba(0,0,0,0.12);
+        border-color: #0d6efd;
+    }
+
+    .task-card .fw-bold {
+        color: var(--card-text) !important;
+        font-size: 0.95rem;
+        line-height: 1.3;
+    }
+
+    .task-card .small {
+        color: var(--card-text) !important;
+        opacity: 0.85;
+        font-size: 0.75rem;
+    }
+
+    .task-card .status-badge {
+        font-size: 0.70rem;
+        padding: 4px 8px;
+        white-space: nowrap;
+        color: #ffffff !important;
+    }
+
+    .task-card .badge {
+        color: var(--card-text) !important;
+        border-color: var(--border-color) !important;
+        background-color: rgba(0,0,0,0.05) !important;
+        font-size: 0.70rem;
+        padding: 4px 6px;
+    }
+
+    [data-theme="dark"] .task-card .badge {
+        background-color: rgba(255,255,255,0.08) !important;
     }
 
     /* Estilos del Sidebar de Proyectos */
@@ -77,6 +115,108 @@
         background-color: var(--bg-color);
         border-color: var(--border-color) var(--border-color) var(--bg-color);
         color: var(--text-color);
+    }
+
+    /* Swimlanes mejoradas */
+    .sprint-swimlane {
+        border: 1.5px solid var(--border-color) !important;
+    }
+
+    .sprint-swimlane h5 {
+        color: var(--text-color) !important;
+    }
+
+    .sprint-swimlane .task-list {
+        background-color: var(--card-bg) !important;
+        border: 1.5px dashed var(--border-color) !important;
+    }
+
+    /* FullCalendar Estilos Mejorados */
+    .fc {
+        font-family: inherit;
+    }
+
+    .fc .fc-button-primary {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+
+    .fc .fc-button-primary:hover {
+        background-color: #0b5ed7;
+        border-color: #0a58ca;
+    }
+
+    .fc .fc-button-primary:not(:disabled).fc-button-active {
+        background-color: #0b5ed7;
+        border-color: #0a58ca;
+    }
+
+    .fc .fc-daygrid-day {
+        background-color: var(--card-bg);
+        color: var(--card-text);
+    }
+
+    .fc .fc-daygrid-day:hover {
+        background-color: var(--board-bg);
+    }
+
+    .fc .fc-daygrid-day.fc-day-other {
+        background-color: var(--board-bg);
+        opacity: 0.6;
+    }
+
+    .fc .fc-col-header-cell {
+        background-color: var(--board-bg);
+        color: var(--text-color);
+        border-color: var(--border-color);
+    }
+
+    .fc .fc-daygrid-day-frame {
+        background-color: var(--card-bg);
+        color: var(--card-text);
+    }
+
+    .fc .fc-event {
+        background-color: #0d6efd !important;
+        border-color: #0d6efd !important;
+        padding: 2px 4px;
+        margin: 1px;
+    }
+
+    .fc .fc-event-title {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #ffffff !important;
+    }
+
+    .fc a {
+        color: #0d6efd;
+    }
+
+    .fc-theme-bootstrap .fc-button-primary {
+        background-color: #0d6efd;
+    }
+
+    [data-theme="dark"] .fc .fc-daygrid-day {
+        background-color: #22272b;
+        color: #e0e0e0;
+        border-color: #3b4045;
+    }
+
+    [data-theme="dark"] .fc .fc-col-header-cell {
+        background-color: #1d2125;
+        color: #b6c2cf;
+        border-color: #3b4045;
+    }
+
+    [data-theme="dark"] .fc {
+        color: #b6c2cf;
+    }
+
+    [data-theme="dark"] .fc-button-primary {
+        color: #fff;
+        background-color: #0d6efd;
+        border-color: #0d6efd;
     }
 
     /* Animaciones */
@@ -188,7 +328,7 @@
                         <strong>Cronograma (Roadmap)</strong> - Aquí se visualizará el diagrama de Gantt de los Sprints.
                     </div>
                     <!-- El calendario se mostrará aquí -->
-                    <div id="calendar" class="mt-4 p-3 rounded shadow-sm" style="background-color: #ffffff; color: #000000; min-height: 400px;"></div>
+                    <div id="calendar" class="mt-4 p-3 rounded shadow-sm" style="background-color: var(--card-bg); color: var(--card-text); min-height: 500px; border: 1px solid var(--border-color);"></div>
                 </div>
             </div>
         </div>
@@ -207,6 +347,12 @@
                         <div class="mb-3">
                             <label for="taskTitle" class="form-label">Nombre de la tarea</label>
                             <input type="text" class="form-control" id="taskTitle" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="taskSprint" class="form-label">Sprint</label>
+                            <select class="form-select" id="taskSprint">
+                                <option value="0">(Sin Sprint / Backlog)</option>
+                            </select>
                         </div>
                         <div class="mb-3">
                             <label for="taskUser" class="form-label">Usuario Asignado</label>
@@ -342,10 +488,24 @@ $(document).ready(function () {
         calendarInstance = new FullCalendar.Calendar(calendarEl, {
             initialView: 'dayGridMonth',
             locale: 'es',
-            themeSystem: 'standard',
-            events: []
+            themeSystem: 'bootstrap',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,listMonth'
+            },
+            height: 'auto',
+            contentHeight: 'auto',
+            events: [],
+            eventDisplay: 'block',
+            eventTimeFormat: {
+                hour: '2-digit',
+                minute: '2-digit',
+                meridiem: false
+            }
         });
         calendarInstance.render();
+        updateCalendarTheme();
     }
 
     // Redibujar calendario al cambiar a la pestaña de Cronograma
@@ -421,62 +581,84 @@ function loadDashboard() {
             tasks.forEach(task => {
                 let sId = task.sprintId || 0;
 
-                // 1. Aquí va la generación de la insignia de estado (statusBadge)
+                // 1. Generación de la insignia de estado mejorada
                 let statusBadge = '';
-                if(task.status == 1) statusBadge = '<span class="status-badge badge bg-primary">In Progress</span>';
-                else if(task.status == 2) statusBadge = '<span class="status-badge badge bg-success">Done</span>';
-                else statusBadge = '<span class="status-badge badge bg-secondary">To Do</span>';
+                let statusColor = 'bg-secondary';
+                let statusText = 'To Do';
+                
+                if(task.status == 1) {
+                    statusColor = 'bg-primary';
+                    statusText = 'In Progress';
+                } else if(task.status == 2) {
+                    statusColor = 'bg-success';
+                    statusText = 'Done';
+                }
+                statusBadge = `<span class="status-badge badge ${statusColor}">${statusText}</span>`;
 
                 let card = `
                 <div class="task-card shadow-sm fade-in" style="cursor: pointer;"
                      data-id="${task.id}" 
                      data-title="${task.title}" 
                      data-user="${task.assignedUser}" 
-                     data-type="${task.taskType}" 
+                     data-type="${task.taskType || 'Tarea'}" 
                      data-start="${task.startDate || ''}" 
                      data-end="${task.endDate || ''}"
                      data-sprint="${task.sprintId || 0}"
                      onclick="openEditTaskModal(this)">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <div class="fw-bold text-wrap text-break pe-2">${task.title}</div>
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
+                        <div class="fw-bold text-wrap text-break" style="flex: 1; color: var(--card-text); word-break: break-word;">${task.title}</div>
                         ${statusBadge}
                     </div>
-                    <div class="small mb-2" style="color: var(--text-color); opacity: 0.7;">TASK-${task.id}</div>
-                    <div class="d-flex justify-content-between align-items-center mt-2">
-                        <span class="badge border text-truncate" style="color: var(--text-color); border-color: var(--border-color) !important; max-width: 100%;" title="${task.assignedUser}">👤 ${task.assignedUser}</span>
+                    <div class="small" style="color: var(--card-text); opacity: 0.7; font-size: 0.75rem;">TASK-${task.id}</div>
+                    <div style="display: flex; justify-content: flex-start; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 6px;">
+                        <span class="badge" style="color: var(--card-text); border-color: var(--border-color) !important; background-color: rgba(0,0,0,0.05); max-width: 100%; text-overflow: ellipsis; overflow: hidden; font-size: 0.70rem;" title="${task.assignedUser}">👤 ${task.assignedUser}</span>
                     </div>
-                    ${task.startDate ? `<div class="mt-1" style="font-size: 0.70rem; color: var(--text-color); opacity: 0.8;">📅 ${task.startDate} ${task.endDate ? `- ${task.endDate}` : ''}</div>` : ''}
+                    ${task.startDate ? `<div style="font-size: 0.70rem; color: var(--card-text); opacity: 0.8; margin-top: 6px;">📅 ${task.startDate}${task.endDate ? ` - ${task.endDate}` : ''}</div>` : ''}
                 </div>`;
                 
                 if(task.status === 1) $(`#inProgressList_${sId}`).append(card);
                 else if (task.status === 2) $(`#doneList_${sId}`).append(card);
                 else $(`#todoList_${sId}`).append(card);
 
-                // 2. Aquí va la configuración de color y la adición al calendario
+                // 2. Configuración de eventos para el calendario basado en fecha de inicio
                 if (task.startDate) {
                     let taskColor = '#6c757d'; // To Do (Gris)
                     if (task.status == 1) taskColor = '#0d6efd'; // In Progress (Azul)
                     if (task.status == 2) taskColor = '#198754'; // Done (Verde)
 
+                    // Convertir DD/MM/YYYY a YYYY-MM-DD
+                    let [day, month, year] = task.startDate.split('/');
+                    let startISO = `${year}-${month}-${day}`;
+                    
+                    let endISO = startISO;
+                    if(task.endDate) {
+                        let [endDay, endMonth, endYear] = task.endDate.split('/');
+                        endISO = `${endYear}-${endMonth}-${endDay}`;
+                    }
+
                     events.push({
-                        title: `[Tarea] ${task.title}`,
-                        start: task.startDate.split('/').reverse().join('-'),
-                        color: taskColor
+                        title: `[${task.taskType || 'Tarea'}] ${task.title}`,
+                        start: startISO,
+                        end: endISO,
+                        color: taskColor,
+                        extendedProps: {
+                            assignee: task.assignedUser
+                        }
                     });
                 }
 
                 // Agregar a la lista de la pestaña Backlog
-                let statusText = ['To Do', 'In Progress', 'Done'][task.status] || 'To Do';
+                let statusTextBacklog = ['To Do', 'In Progress', 'Done'][task.status] || 'To Do';
                 $('#backlogList').append(`
-                    <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2" style="background-color: var(--card-bg); color: var(--text-color); border-color: var(--border-color);">
+                    <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2" style="background-color: var(--card-bg); color: var(--card-text); border-color: var(--border-color);">
                         <div class="d-flex flex-column">
                             <div><span class="fw-bold me-2">TASK-${task.id}</span><span class="fw-bold">${task.title}</span></div>
-                            <div class="small text-muted mt-1">
+                            <div class="small mt-1" style="color: var(--card-text); opacity: 0.8;">
                                 <span class="me-3">👤 ${task.assignedUser}</span>
-                                ${task.startDate && task.endDate ? `<span>📅 ${task.startDate} - ${task.endDate}</span>` : ''}
+                                ${task.startDate && task.endDate ? `<span>📅 ${task.startDate} - ${task.endDate}</span>` : task.startDate ? `<span>📅 ${task.startDate}</span>` : ''}
                             </div>
                         </div>
-                        <span class="badge bg-secondary rounded-pill">${statusText}</span>
+                        <span class="badge bg-secondary rounded-pill">${statusTextBacklog}</span>
                     </li>`);
             });
             initSortable();
@@ -488,8 +670,15 @@ function loadDashboard() {
 
         // Refrescar el calendario
         if (calendarInstance) {
-            calendarInstance.removeAllEvents();
-            calendarInstance.addEventSource(events);
+            // Limpiar eventos existentes
+            calendarInstance.getEvents().forEach(event => event.remove());
+            
+            // Agregar los nuevos eventos
+            events.forEach(event => {
+                calendarInstance.addEvent(event);
+            });
+            
+            updateCalendarTheme();
         }
     }).fail(function() {
         $('#project-tabs button').prop('disabled', false);
@@ -607,4 +796,50 @@ function addSprint() {
         loadDashboard();
     });
 }
+
+function updateCalendarTheme() {
+    if (!calendarInstance) return;
+    
+    let calendarEl = document.getElementById('calendar');
+    if (calendarEl) {
+        let isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        
+        if (isDark) {
+            calendarEl.style.backgroundColor = '#22272b';
+            calendarEl.style.color = '#b6c2cf';
+        } else {
+            calendarEl.style.backgroundColor = '#ffffff';
+            calendarEl.style.color = '#172b4d';
+        }
+    }
+}
+
+function openEditTaskModal(element) {
+    // Placeholder para editar tarea (puede implementarse después)
+    let taskId = $(element).data('id');
+    let title = $(element).data('title');
+    console.log('Abriendo tarea:', taskId, title);
+    // Aquí se podría abrir un modal de edición
+}
+
+// Cambio de tema
+$(document).ready(function() {
+    const themeToggle = document.getElementById('themeToggle');
+    const htmlElement = document.documentElement;
+    
+    // Cargar tema guardado
+    let savedTheme = localStorage.getItem('theme') || 'light';
+    htmlElement.setAttribute('data-theme', savedTheme);
+    updateCalendarTheme();
+    
+    if (themeToggle) {
+        themeToggle.addEventListener('click', function() {
+            let currentTheme = htmlElement.getAttribute('data-theme');
+            let newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            htmlElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateCalendarTheme();
+        });
+    }
+});
 </script>
