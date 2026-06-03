@@ -310,6 +310,18 @@
 let currentProjectId = 0;
 
 $(document).ready(function () {
+    // Desactivar caché de AJAX para que las tareas se refresquen al instante desde la base de datos
+    $.ajaxSetup({ 
+        cache: false,
+        error: function (jqXHR, textStatus, errorThrown) {
+            if (jqXHR.status === 401) {
+                alert("Tu sesión ha expirado por seguridad. Por favor, inicia sesión nuevamente.");
+                window.location.href = '/Account/Login';
+            }
+        }
+    });
+
+
     loadProjects();
     
     // Funcionalidad al hacer clic en los proyectos
