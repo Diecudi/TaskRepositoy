@@ -66,6 +66,19 @@
         border-radius: 10px;
     }
 
+    /* Estilos para nav-pills de proyectos */
+    .nav-pills .nav-link {
+        color: var(--text-color);
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        transition: all 0.2s;
+    }
+    .nav-pills .nav-link.active {
+        background-color: #0d6efd;
+        color: #fff;
+        border-color: #0d6efd;
+    }
+
     /* Sobrescribir colores de los tabs para modo nocturno */
     .nav-tabs {
         border-bottom-color: var(--border-color);
@@ -100,9 +113,6 @@
         </div>
         
         <div class="d-flex align-items-center gap-3">
-            <button id="themeToggle" class="btn btn-outline-secondary rounded-circle" title="Modo Nocturno">
-                &#127183;
-            </button>
             <!-- Perfil de Usuario con Foto -->
             <div class="d-flex align-items-center gap-2">
                 <span>User Admin</span>
@@ -119,9 +129,9 @@
                     <h6 class="mb-0 fw-bold text-uppercase text-secondary">Proyectos</h6>
                     <button class="btn btn-sm btn-primary rounded-circle" data-bs-toggle="modal" data-bs-target="#addProjectModal" title="Nuevo Proyecto" style="width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">+</button>
                 </div>
-                <div class="nav flex-column nav-pills" id="project-tabs" role="tablist" aria-orientation="vertical">
+                <div class="nav flex-column nav-pills gap-2" id="project-tabs" role="tablist" aria-orientation="vertical">
                     <button class="nav-link active mb-2 fw-bold text-start" data-bs-toggle="pill" type="button" role="tab">Proyecto Alpha</button>
-                    <button class="nav-link mb-2 fw-bold text-start text-muted" data-bs-toggle="pill" type="button" role="tab" style="background-color: var(--card-bg); border: 1px solid var(--border-color);">Proyecto Beta</button>
+                    <button class="nav-link mb-2 fw-bold text-start text-muted" data-bs-toggle="pill" type="button" role="tab">Proyecto Beta</button>
                 </div>
             </div>
         </div>
@@ -147,17 +157,17 @@
                     <div class="kanban-board">
                         <div class="kanban-column">
                             <h6 class="text-uppercase fw-bold mb-3 text-secondary">To Do <span class="badge bg-secondary ms-1" id="count-todo">0</span></h6>
-                            <div id="todoList"></div>
+                            <div id="todoList" style="min-height: 150px;"></div>
                         </div>
                         
                         <div class="kanban-column">
                             <h6 class="text-uppercase fw-bold mb-3 text-secondary">In Progress <span class="badge bg-primary ms-1" id="count-inprogress">0</span></h6>
-                            <div id="inProgressList"></div>
+                            <div id="inProgressList" style="min-height: 150px;"></div>
                         </div>
                         
                         <div class="kanban-column">
                             <h6 class="text-uppercase fw-bold mb-3 text-secondary">Done <span class="badge bg-success ms-1" id="count-done">0</span></h6>
-                            <div id="doneList"></div>
+                            <div id="doneList" style="min-height: 150px;"></div>
                         </div>
                     </div>
                 </div>
@@ -308,21 +318,50 @@
 </div>
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<!-- SortableJS para Drag & Drop -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 <!-- Aseguramos que Bootstrap JS está cargado para que funcionen las pestañas -->
 <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
 $(document).ready(function () {
     loadTasks();
-    
-    // Lógica para el Modo Nocturno
-    const currentTheme = localStorage.getItem('theme') || 'light';
-    document.body.setAttribute('data-theme', currentTheme);
-    
-    $('#themeToggle').click(function() {
-        const theme = document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-        document.body.setAttribute('data-theme', theme);
-        localStorage.setItem('theme', theme);
+
+    // Inicializar SortableJS para arrastrar tarjetas
+    const sortableOptions = {
+        group: 'kanban', // Permite mover entre listas
+        animation: 150,
+        ghostClass: 'opacity-50', // Transparencia al arrastrar
+        onEnd: function (evt) {
+            const taskId = evt.item.getAttribute('data-id');
+            const toList = evt.to.id;
+            
+            let newStatus = 0; // ToDo
+            if (toList === 'inProgressList') newStatus = 1;
+            if (toList === 'doneList') newStatus = 2;
+
+            if (taskId) {
+                // Actualizar estado permanentemente en MySQL
+                $.post('/Task/UpdateTaskStatus', { id: taskId, status: newStatus }, function() {
+                    updateCounts();
+                });
+            } else {
+                updateCounts();
+            }
+        }
+    };
+
+    new Sortable(document.getElementById('todoList'), sortableOptions);
+    new Sortable(document.getElementById('inProgressList'), sortableOptions);
+    new Sortable(document.getElementById('doneList'), sortableOptions);
+
+    // Funcionalidad al hacer clic en los proyectos
+    $(document).on('shown.bs.tab', 'button[data-bs-toggle="pill"]', function (e) {
+        $(e.target).removeClass('text-muted');
+        $(e.relatedTarget).addClass('text-muted');
+        
+        // Simular que recargamos el entorno al cambiar de proyecto
+        loadTasks();
     });
 });
 
@@ -333,7 +372,7 @@ function loadTasks() {
         let todo = 0, inprog = 0, done = 0;
         
         tasks.forEach(function(task) {
-            let card = `<div class="task-card shadow-sm fade-in">
+            let card = `<div class="task-card shadow-sm fade-in" data-id="${task.id}">
                             <div class="fw-bold">${task.title}</div>
                             <small class="text-muted">TASK-${task.id || Math.floor(Math.random() * 1000)}</small>
                         </div>`;
@@ -369,6 +408,12 @@ function loadTasks() {
     });
 }
 
+function updateCounts() {
+    $('#count-todo').text($('#todoList').children().length);
+    $('#count-inprogress').text($('#inProgressList').children().length);
+    $('#count-done').text($('#doneList').children().length);
+}
+
 function addTask() {
     let title = $('#taskTitle').val();
     let user = $('#taskUser').val();
@@ -401,7 +446,7 @@ function addProject() {
     if(!name) return;
     
     // Simulamos que se añade a la lista visualmente
-    $('#project-tabs').append(`<button class="nav-link mb-2 fw-bold text-start text-muted" data-bs-toggle="pill" type="button" role="tab" style="background-color: var(--card-bg); border: 1px solid var(--border-color);">${name}</button>`);
+    $('#project-tabs').append(`<button class="nav-link mb-2 fw-bold text-start text-muted" data-bs-toggle="pill" type="button" role="tab">${name}</button>`);
     
     $('#projectForm')[0].reset();
     $('#addProjectModal').modal('hide');

@@ -65,5 +65,18 @@ namespace Tasks.Controllers
 
             return Ok();
         }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateTaskStatus(int id, int status)
+        {
+            var task = await _context.WorkItems.FindAsync(id);
+            if (task != null)
+            {
+                task.Status = (WorkItemStatus)status;
+                await _context.SaveChangesAsync();
+                return Ok();
+            }
+            return NotFound();
+        }
     }
 }
