@@ -598,7 +598,24 @@ function loadDashboard() {
             console.log('✅ Tareas recibidas:', tasks);
             $('#backlogList').empty();
 
-            if (!tasks || tasks.length === 0) {
+            // Si es un error, mostrar el mensaje
+            if (tasks.error) {
+                console.error('❌ Error en GetTasks:', tasks.error);
+                $('#sprintsContainer').append(`<div class="alert alert-danger mt-3">⚠️ Error: ${tasks.error}</div>`);
+                initSortable();
+                $('#project-tabs button').prop('disabled', false);
+                return;
+            }
+
+            if (!Array.isArray(tasks)) {
+                console.error('❌ Respuesta no es un array:', tasks);
+                $('#sprintsContainer').append('<div class="alert alert-danger mt-3">Error: La respuesta del servidor no es válida</div>');
+                initSortable();
+                $('#project-tabs button').prop('disabled', false);
+                return;
+            }
+
+            if (tasks.length === 0) {
                 console.warn('⚠️ No hay tareas para este proyecto');
                 $('#sprintsContainer').append('<div class="alert alert-info mt-3">No hay tareas aún. Crea una para comenzar.</div>');
                 initSortable();
@@ -711,7 +728,7 @@ function loadDashboard() {
         }).fail(function(err) {
             console.error('❌ Error al cargar tareas:', err);
             $('#project-tabs button').prop('disabled', false);
-            $('#sprintsContainer').html('<div class="text-center mt-5 text-danger">Error al cargar tareas. Intenta recargar la página.</div>');
+            $('#sprintsContainer').html('<div class="text-center mt-5 text-danger">❌ Error al cargar tareas. Intenta recargar la página.</div>');
         });
 
         // Refrescar el calendario

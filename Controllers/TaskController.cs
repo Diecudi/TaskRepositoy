@@ -106,24 +106,26 @@ namespace Tasks.Controllers
         {
             try
             {
+                // Traer todo de una sola consulta para evitar problemas de conexión
                 var tasks = _context.WorkItems
                     .Where(t => t.ProjectId == projectId)
-                    .AsEnumerable() // Traer a memoria para evitar problemas de conversión
-                    .Select(t => new {
-                        id = t.Id,
-                        title = t.Title ?? "Sin título",
-                        status = (int)t.Status,
-                        sprintId = t.SprintId,
-                        taskType = t.TaskType ?? "Tarea",
-                        startDate = t.StartDate.HasValue ? t.StartDate.Value.ToString("dd/MM/yyyy") : "",
-                        endDate = t.EndDate.HasValue ? t.EndDate.Value.ToString("dd/MM/yyyy") : "",
-                        assignedUser = _context.Users
-                            .Where(u => u.Id == t.AssignedUserId)
-                            .Select(u => u.FullName)
-                            .FirstOrDefault() ?? "Sin Asignar",
-                        priority = t.Priority ?? "Media",
-                        description = t.Description ?? ""
-                    })
+                    .Join(
+                        _context.Users,
+                        wi => wi.AssignedUserId,
+                        u => u.Id,
+                        (wi, u) => new {
+                            id = wi.Id,
+                            title = wi.Title ?? "Sin título",
+                            status = (int)wi.Status,
+                            sprintId = wi.SprintId,
+                            taskType = wi.TaskType ?? "Tarea",
+                            startDate = wi.StartDate.HasValue ? wi.StartDate.Value.ToString("dd/MM/yyyy") : "",
+                            endDate = wi.EndDate.HasValue ? wi.EndDate.Value.ToString("dd/MM/yyyy") : "",
+                            assignedUser = u.FullName ?? "Sin Asignar",
+                            priority = wi.Priority ?? "Media",
+                            description = wi.Description ?? ""
+                        }
+                    )
                     .ToList();
 
                 return Json(tasks);
