@@ -104,17 +104,34 @@ namespace Tasks.Controllers
         [HttpGet]
         public IActionResult GetTasks(int projectId)
         {
-            var tasks = _context.WorkItems.Where(t => t.ProjectId == projectId).Select(t => new {
-                id = t.Id,
-                title = t.Title,
-                status = (int)t.Status,
-                sprintId = t.SprintId,
-                startDate = t.StartDate.HasValue ? t.StartDate.Value.ToString("dd/MM/yyyy") : "",
-                endDate = t.EndDate.HasValue ? t.EndDate.Value.ToString("dd/MM/yyyy") : "",
-                assignedUser = _context.Users.Where(u => u.Id == t.AssignedUserId).Select(u => u.FullName).FirstOrDefault() ?? "Sin Asignar"
-            }).ToList();
+            try
+            {
+                var tasks = _context.WorkItems
+                    .Where(t => t.ProjectId == projectId)
+                    .AsEnumerable() // Traer a memoria para evitar problemas de conversión
+                    .Select(t => new {
+                        id = t.Id,
+                        title = t.Title ?? "Sin título",
+                        status = (int)t.Status,
+                        sprintId = t.SprintId,
+                        taskType = t.TaskType ?? "Tarea",
+                        startDate = t.StartDate.HasValue ? t.StartDate.Value.ToString("dd/MM/yyyy") : "",
+                        endDate = t.EndDate.HasValue ? t.EndDate.Value.ToString("dd/MM/yyyy") : "",
+                        assignedUser = _context.Users
+                            .Where(u => u.Id == t.AssignedUserId)
+                            .Select(u => u.FullName)
+                            .FirstOrDefault() ?? "Sin Asignar",
+                        priority = t.Priority ?? "Media",
+                        description = t.Description ?? ""
+                    })
+                    .ToList();
 
-            return Json(tasks);
+                return Json(tasks);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message });
+            }
         }
 
         [HttpPost]

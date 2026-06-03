@@ -530,6 +530,7 @@ $(document).ready(function () {
 
 function loadProjects() {
     $.get('/Task/GetProjects', function(projects) {
+        console.log('🏗️ Proyectos cargados:', projects);
         $('#project-tabs').empty();
         if(projects.length > 0) {
             projects.forEach((p, index) => {
@@ -538,16 +539,20 @@ function loadProjects() {
             });
             selectProject(projects[0].id);
         } else {
+            console.warn('⚠️ No hay proyectos');
             $('#sprintsContainer').html('<div class="text-center mt-5 text-muted">No hay proyectos. Crea uno primero.</div>');
             $('#project-tabs').append('<span class="text-muted small">Sin proyectos</span>');
             currentProjectId = 0;
         }
+    }).fail(function(err) {
+        console.error('❌ Error al cargar proyectos:', err);
     });
 }
 
 function selectProject(id) {
     if (currentProjectId === id) return; // Evitar recargar el mismo proyecto si ya está activo
     currentProjectId = id;
+    console.log('✅ Proyecto seleccionado:', id);
     
     // Bloquear botones y mostrar pantalla de carga
     $('#project-tabs button').removeClass('active').addClass('text-muted').prop('disabled', true);
@@ -563,6 +568,7 @@ function loadDashboard() {
     if(currentProjectId === 0) return;
     
     $.get('/Task/GetSprints?projectId=' + currentProjectId, function(sprints) {
+        console.log('📋 Sprints cargados:', sprints);
         let sprintSelect = $('#taskSprint');
         sprintSelect.empty();
         sprintSelect.append('<option value="0">(Sin Sprint / Backlog)</option>');
@@ -572,6 +578,7 @@ function loadDashboard() {
         let events = [];
 
         sprints.forEach(s => {
+            console.log('➕ Agregando sprint:', s.name);
             sprintSelect.append(`<option value="${s.id}">${s.name}</option>`);
             container.append(createSwimlaneHtml(s.id, s.name, s.startDate, s.endDate));
             
@@ -588,9 +595,19 @@ function loadDashboard() {
         container.append(createSwimlaneHtml(0, 'Backlog General', '', ''));
 
         $.get('/Task/GetTasks?projectId=' + currentProjectId, function(tasks) {
+            console.log('✅ Tareas recibidas:', tasks);
             $('#backlogList').empty();
 
+            if (!tasks || tasks.length === 0) {
+                console.warn('⚠️ No hay tareas para este proyecto');
+                $('#sprintsContainer').append('<div class="alert alert-info mt-3">No hay tareas aún. Crea una para comenzar.</div>');
+                initSortable();
+                $('#project-tabs button').prop('disabled', false);
+                return;
+            }
+
             tasks.forEach(task => {
+                console.log('📌 Procesando tarea:', task);
                 let sId = task.sprintId || 0;
 
                 // 1. Generación de la insignia de estado mejorada
@@ -628,9 +645,23 @@ function loadDashboard() {
                     ${task.startDate ? `<div style="font-size: 0.70rem; color: var(--card-text); opacity: 0.8; margin-top: 6px;">📅 ${task.startDate}${task.endDate ? ` - ${task.endDate}` : ''}</div>` : ''}
                 </div>`;
                 
-                if(task.status === 1) $(`#inProgressList_${sId}`).append(card);
-                else if (task.status === 2) $(`#doneList_${sId}`).append(card);
-                else $(`#todoList_${sId}`).append(card);
+                // Verificar que exista el contenedor antes de agregar
+                let todoList = $(`#todoList_${sId}`);
+                let inProgressList = $(`#inProgressList_${sId}`);
+                let doneList = $(`#doneList_${sId}`);
+
+                if(task.status === 1) {
+                    if(inProgressList.length) inProgressList.append(card);
+                    else console.warn('⚠️ No encontrado: #inProgressList_' + sId);
+                }
+                else if (task.status === 2) {
+                    if(doneList.length) doneList.append(card);
+                    else console.warn('⚠️ No encontrado: #doneList_' + sId);
+                }
+                else {
+                    if(todoList.length) todoList.append(card);
+                    else console.warn('⚠️ No encontrado: #todoList_' + sId);
+                }
 
                 // 2. Configuración de eventos para el calendario basado en fecha de inicio
                 if (task.startDate) {
@@ -673,9 +704,12 @@ function loadDashboard() {
                         <span class="badge bg-secondary rounded-pill">${statusTextBacklog}</span>
                     </li>`);
             });
+
+            console.log('✅ Total de eventos en calendario:', events.length);
             initSortable();
             $('#project-tabs button').prop('disabled', false); // Desbloquear botones al finalizar
-        }).fail(function() {
+        }).fail(function(err) {
+            console.error('❌ Error al cargar tareas:', err);
             $('#project-tabs button').prop('disabled', false);
             $('#sprintsContainer').html('<div class="text-center mt-5 text-danger">Error al cargar tareas. Intenta recargar la página.</div>');
         });
