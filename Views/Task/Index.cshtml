@@ -144,22 +144,8 @@
             <div class="tab-content" id="jiraTabContent">
                 <!-- VISTA: TABLERO KANBAN -->
                 <div class="tab-pane fade show active" id="tablero" role="tabpanel" aria-labelledby="tablero-tab">
-                    <div class="kanban-board">
-                        <div class="kanban-column">
-                            <h6 class="text-uppercase fw-bold mb-3 text-secondary">To Do <span class="badge bg-secondary ms-1" id="count-todo">0</span></h6>
-                            <div id="todoList"></div>
-                        </div>
-                        
-                        <div class="kanban-column">
-                            <h6 class="text-uppercase fw-bold mb-3 text-secondary">In Progress <span class="badge bg-primary ms-1" id="count-inprogress">0</span></h6>
-                            <div id="inProgressList"></div>
-                        </div>
-                        
-                        <div class="kanban-column">
-                            <h6 class="text-uppercase fw-bold mb-3 text-secondary">Done <span class="badge bg-success ms-1" id="count-done">0</span></h6>
-                            <div id="doneList"></div>
-                        </div>
-                    </div>
+                    <!-- Contenedor dinámico donde se generarán los Sprints y el Backlog -->
+                    <div id="sprintsContainer"></div>
                 </div>
 
                 <!-- VISTA: BACKLOG -->
@@ -221,6 +207,12 @@
                                 <option value="Historia">Historia</option>
                                 <option value="Bug">Bug (Error)</option>
                                 <option value="Tarea">Tarea</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="taskSprint" class="form-label">Sprint (Opcional)</label>
+                            <select class="form-select" id="taskSprint">
+                                <option value="0">(Sin Sprint / Backlog)</option>
                             </select>
                         </div>
                         <div class="row">
@@ -405,10 +397,10 @@ function loadDashboard() {
             
             // Agregamos el sprint al calendario
             events.push({
-                title: `[Sprint] ${s.name}`,
+                title: s.name,
                 start: s.startDate.split('/').reverse().join('-'), // DD/MM/YYYY a YYYY-MM-DD
                 end: s.endDate.split('/').reverse().join('-'),
-                color: '#6f42c1' // Diferenciar Sprints con color morado
+                color: '#0d6efd'
             });
         });
         
@@ -420,18 +412,9 @@ function loadDashboard() {
 
             tasks.forEach(task => {
                 let sId = task.sprintId || 0;
-                
-                let statusBadge = '';
-                if(task.status === 1) statusBadge = '<span class="status-badge badge bg-primary">In Progress</span>';
-                else if(task.status === 2) statusBadge = '<span class="status-badge badge bg-success">Done</span>';
-                else statusBadge = '<span class="status-badge badge bg-secondary">To Do</span>';
-                
                 let card = `
                 <div class="task-card shadow-sm fade-in" data-id="${task.id}">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <div class="fw-bold text-wrap text-break pe-2">${task.title}</div>
-                        ${statusBadge}
-                    </div>
+                    <div class="fw-bold text-wrap text-break">${task.title}</div>
                     <div class="small text-muted mb-2">TASK-${task.id}</div>
                     <div class="d-flex justify-content-between align-items-center mt-2">
                         <span class="badge bg-light text-dark border text-truncate" style="max-width: 100%;" title="${task.assignedUser}">👤 ${task.assignedUser}</span>
@@ -456,33 +439,19 @@ function loadDashboard() {
                         </div>
                         <span class="badge bg-secondary rounded-pill">${statusText}</span>
                     </li>`);
-
-                // Agregamos la tarea al calendario usando el color de su estado
-                if (task.startDate && task.endDate) {
-                    let taskColor = '#6c757d'; // To Do (Gris)
-                    if (task.status === 1) taskColor = '#0d6efd'; // In Progress (Azul)
-                    if (task.status === 2) taskColor = '#198754'; // Done (Verde)
-
-                    events.push({
-                        title: `[Tarea] ${task.title}`,
-                        start: task.startDate.split('/').reverse().join('-'),
-                        end: task.endDate.split('/').reverse().join('-'),
-                        color: taskColor
-                    });
-                }
             });
             initSortable();
             $('#project-tabs button').prop('disabled', false); // Desbloquear botones al finalizar
-            
-            // Refrescar el calendario después de agregar Sprints y Tareas
-            if (calendarInstance) {
-                calendarInstance.removeAllEvents();
-                calendarInstance.addEventSource(events);
-            }
         }).fail(function() {
             $('#project-tabs button').prop('disabled', false);
             $('#sprintsContainer').html('<div class="text-center mt-5 text-danger">Error al cargar tareas. Intenta recargar la página.</div>');
         });
+
+        // Refrescar el calendario
+        if (calendarInstance) {
+            calendarInstance.removeAllEvents();
+            calendarInstance.addEventSource(events);
+        }
     }).fail(function() {
         $('#project-tabs button').prop('disabled', false);
         $('#sprintsContainer').html('<div class="text-center mt-5 text-danger">Error al cargar sprints. Intenta recargar la página.</div>');
@@ -520,19 +489,6 @@ function initSortable() {
             const taskId = evt.item.getAttribute('data-id');
             const newStatus = evt.to.getAttribute('data-status');
             const newSprintId = evt.to.getAttribute('data-sprint-id');
-
-            // Actualizamos la etiqueta de estado visualmente en tiempo real
-            let badge = $(evt.item).find('.status-badge');
-            if (badge.length > 0) {
-                badge.removeClass('bg-secondary bg-primary bg-success');
-                if (newStatus == '1') {
-                    badge.addClass('bg-primary').text('In Progress');
-                } else if (newStatus == '2') {
-                    badge.addClass('bg-success').text('Done');
-                } else {
-                    badge.addClass('bg-secondary').text('To Do');
-                }
-            }
 
             if (taskId) {
                 $.post('/Task/UpdateTaskStatus', { id: taskId, status: newStatus, sprintId: newSprintId });
