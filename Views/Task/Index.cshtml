@@ -480,6 +480,18 @@ $(document).ready(function () {
         }
     });
 
+    // Verificar conexión a la base de datos
+    $.get('/Task/HealthCheck', function(health) {
+        console.log('Database Health:', health);
+        if (health.status !== 'OK') {
+            console.error('Database Connection Error:', health.error);
+            $('#sprintsContainer').html('<div class="alert alert-danger">⚠️ Error de conexión a la base de datos. Contacta al administrador.</div>');
+            return;
+        }
+    }).fail(function(err) {
+        console.error('HealthCheck failed:', err);
+    });
+
     loadProjects();
 
     // Inicializar Calendario

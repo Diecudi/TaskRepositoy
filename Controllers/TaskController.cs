@@ -26,6 +26,37 @@ namespace Tasks.Controllers
             return View();
         }
 
+        // Endpoint de diagnóstico (sin autenticación)
+        [AllowAnonymous]
+        [HttpGet]
+        public IActionResult HealthCheck()
+        {
+            try
+            {
+                var projectCount = _context.Projects.Count();
+                var taskCount = _context.WorkItems.Count();
+                var userCount = _context.Users.Count();
+                
+                return Json(new { 
+                    status = "OK", 
+                    database = "Connected",
+                    projects = projectCount,
+                    tasks = taskCount,
+                    users = userCount,
+                    timestamp = DateTime.Now
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { 
+                    status = "ERROR", 
+                    database = "Disconnected",
+                    error = ex.Message,
+                    timestamp = DateTime.Now
+                });
+            }
+        }
+
         [HttpGet]
         public IActionResult GetProjects()
         {
