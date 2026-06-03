@@ -77,7 +77,10 @@ namespace Tasks.Controllers
                 id = t.Id,
                 title = t.Title,
                 status = (int)t.Status,
-                sprintId = t.SprintId // Clave para colocar la tarea en su Sprint correspondiente
+                sprintId = t.SprintId,
+                startDate = t.StartDate.HasValue ? t.StartDate.Value.ToString("dd/MM/yyyy") : "",
+                endDate = t.EndDate.HasValue ? t.EndDate.Value.ToString("dd/MM/yyyy") : "",
+                assignedUser = _context.Users.Where(u => u.Id == t.AssignedUserId).Select(u => u.FullName).FirstOrDefault() ?? "Sin Asignar"
             }).ToList();
 
             return Json(tasks);

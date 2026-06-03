@@ -343,9 +343,14 @@ function loadProjects() {
 }
 
 function selectProject(id) {
+    if (currentProjectId === id) return; // Evitar recargar el mismo proyecto si ya está activo
     currentProjectId = id;
-    $('#project-tabs button').removeClass('active').addClass('text-muted');
+    $('#project-tabs button').removeClass('active').addClass('text-muted').prop('disabled', true);
     $(`#project-tabs button[onclick="selectProject(${id})"]`).addClass('active').removeClass('text-muted');
+
+    $('#sprintsContainer').html('<div class="text-center mt-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted">Cargando tablero...</p></div>');
+    $('#backlogList').html('<div class="text-center p-4"><div class="spinner-border text-primary" role="status"></div></div>');
+
     loadDashboard();
 }
 
@@ -382,7 +387,15 @@ function loadDashboard() {
 
             tasks.forEach(task => {
                 let sId = task.sprintId || 0;
-                let card = `<div class="task-card shadow-sm fade-in" data-id="${task.id}"><div class="fw-bold">${task.title}</div><small class="text-muted">TASK-${task.id}</small></div>`;
+                let card = `
+                <div class="task-card shadow-sm fade-in" data-id="${task.id}">
+                    <div class="fw-bold text-wrap text-break">${task.title}</div>
+                    <div class="small text-muted mb-2">TASK-${task.id}</div>
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                        <span class="badge bg-light text-dark border text-truncate" style="max-width: 100%;" title="${task.assignedUser}">👤 ${task.assignedUser}</span>
+                    </div>
+                    ${task.startDate && task.endDate ? `<div class="text-muted mt-1" style="font-size: 0.70rem;">📅 ${task.startDate} - ${task.endDate}</div>` : ''}
+                </div>`;
                 
                 if(task.status === 1) $(`#inProgressList_${sId}`).append(card);
                 else if (task.status === 2) $(`#doneList_${sId}`).append(card);
@@ -390,14 +403,33 @@ function loadDashboard() {
 
                 // Agregar a la lista de la pestaña Backlog
                 let statusText = ['To Do', 'In Progress', 'Done'][task.status] || 'To Do';
-                $('#backlogList').append(`<li class="list-group-item d-flex justify-content-between align-items-center" style="background-color: var(--card-bg); color: var(--text-color); border-color: var(--border-color);"><div><span class="fw-bold me-2">TASK-${task.id}</span><span>${task.title}</span></div><span class="badge bg-secondary rounded-pill">${statusText}</span></li>`);
+                $('#backlogList').append(`
+                    <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2" style="background-color: var(--card-bg); color: var(--text-color); border-color: var(--border-color);">
+                        <div class="d-flex flex-column">
+                            <div><span class="fw-bold me-2">TASK-${task.id}</span><span class="fw-bold">${task.title}</span></div>
+                            <div class="small text-muted mt-1">
+                                <span class="me-3">👤 ${task.assignedUser}</span>
+                                ${task.startDate && task.endDate ? `<span>📅 ${task.startDate} - ${task.endDate}</span>` : ''}
+                            </div>
+                        </div>
+                        <span class="badge bg-secondary rounded-pill">${statusText}</span>
+                    </li>`);
             });
             initSortable();
+            $('#project-tabs button').prop('disabled', false); // Desbloquear botones al finalizar
+        }).fail(function() {
+            $('#project-tabs button').prop('disabled', false);
+            $('#sprintsContainer').html('<div class="text-center mt-5 text-danger">Error al cargar tareas. Intenta recargar la página.</div>');
+
         });
 
         // Refrescar el calendario
         calendarInstance.removeAllEvents();
         calendarInstance.addEventSource(events);
+          }).fail(function() {
+        $('#project-tabs button').prop('disabled', false);
+        $('#sprintsContainer').html('<div class="text-center mt-5 text-danger">Error al cargar sprints. Intenta recargar la página.</div>');
+
     });
 }
 
