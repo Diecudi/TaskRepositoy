@@ -40,6 +40,7 @@
         max-width: 320px;
         padding: 1rem;
         border: 2px solid var(--border-color);
+        border: 1px solid var(--border-color);
     }
 
     /* MEJORADOS: Estilos de Tarjetas */
@@ -48,6 +49,9 @@
         color: var(--card-text);
         padding: 12px 14px;
         border-radius: 6px;
+        color: var(--text-color);
+        padding: 15px;
+        border-radius: 8px;
         margin-bottom: 12px;
         cursor: grab;
         box-shadow: 0 2px 4px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08);
@@ -56,12 +60,17 @@
         display: flex;
         flex-direction: column;
         gap: 8px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        border: 1px solid var(--border-color);
+        transition: transform 0.2s, box-shadow 0.2s;
     }
 
     .task-card:hover {
         transform: translateY(-3px);
         box-shadow: 0 4px 12px rgba(0,0,0,0.18), 0 2px 4px rgba(0,0,0,0.12);
         border-color: #0d6efd;
+        transform: translateY(-4px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
     }
 
     .task-card .fw-bold {
@@ -131,94 +140,6 @@
         border: 1.5px dashed var(--border-color) !important;
     }
 
-    /* FullCalendar Estilos Mejorados */
-    .fc {
-        font-family: inherit;
-    }
-
-    .fc .fc-button-primary {
-        background-color: #0d6efd;
-        border-color: #0d6efd;
-    }
-
-    .fc .fc-button-primary:hover {
-        background-color: #0b5ed7;
-        border-color: #0a58ca;
-    }
-
-    .fc .fc-button-primary:not(:disabled).fc-button-active {
-        background-color: #0b5ed7;
-        border-color: #0a58ca;
-    }
-
-    .fc .fc-daygrid-day {
-        background-color: var(--card-bg);
-        color: var(--card-text);
-    }
-
-    .fc .fc-daygrid-day:hover {
-        background-color: var(--board-bg);
-    }
-
-    .fc .fc-daygrid-day.fc-day-other {
-        background-color: var(--board-bg);
-        opacity: 0.6;
-    }
-
-    .fc .fc-col-header-cell {
-        background-color: var(--board-bg);
-        color: var(--text-color);
-        border-color: var(--border-color);
-    }
-
-    .fc .fc-daygrid-day-frame {
-        background-color: var(--card-bg);
-        color: var(--card-text);
-    }
-
-    .fc .fc-event {
-        background-color: #0d6efd !important;
-        border-color: #0d6efd !important;
-        padding: 2px 4px;
-        margin: 1px;
-    }
-
-    .fc .fc-event-title {
-        font-size: 0.75rem;
-        font-weight: 600;
-        color: #ffffff !important;
-    }
-
-    .fc a {
-        color: #0d6efd;
-    }
-
-    .fc-theme-bootstrap .fc-button-primary {
-        background-color: #0d6efd;
-    }
-
-    [data-theme="dark"] .fc .fc-daygrid-day {
-        background-color: #22272b;
-        color: #e0e0e0;
-        border-color: #3b4045;
-    }
-
-    [data-theme="dark"] .fc .fc-col-header-cell {
-        background-color: #1d2125;
-        color: #b6c2cf;
-        border-color: #3b4045;
-    }
-
-    [data-theme="dark"] .fc {
-        color: #b6c2cf;
-    }
-
-    [data-theme="dark"] .fc-button-primary {
-        color: #fff;
-        background-color: #0d6efd;
-        border-color: #0d6efd;
-    }
-
     /* Animaciones */
     .fade-in {
         animation: fadeIn 0.6s ease-out;
@@ -286,6 +207,21 @@
                 <div class="tab-pane fade show active" id="tablero" role="tabpanel" aria-labelledby="tablero-tab">
                     <div id="sprintsContainer">
                         <!-- Los Swimlanes se generarán aquí dinámicamente con Javascript -->
+                    <div class="kanban-board">
+                        <div class="kanban-column">
+                            <h6 class="text-uppercase fw-bold mb-3 text-secondary">To Do <span class="badge bg-secondary ms-1" id="count-todo">0</span></h6>
+                            <div id="todoList"></div>
+                        </div>
+                        
+                        <div class="kanban-column">
+                            <h6 class="text-uppercase fw-bold mb-3 text-secondary">In Progress <span class="badge bg-primary ms-1" id="count-inprogress">0</span></h6>
+                            <div id="inProgressList"></div>
+                        </div>
+                        
+                        <div class="kanban-column">
+                            <h6 class="text-uppercase fw-bold mb-3 text-secondary">Done <span class="badge bg-success ms-1" id="count-done">0</span></h6>
+                            <div id="doneList"></div>
+                        </div>
                     </div>
                 </div>
 
@@ -314,8 +250,6 @@
                     <div class="alert alert-info" role="alert" style="background-color: var(--card-bg); border-color: var(--border-color); color: var(--text-color);">
                         <strong>Cronograma (Roadmap)</strong> - Aquí se visualizará el diagrama de Gantt de los Sprints.
                     </div>
-                    <!-- El calendario se mostrará aquí -->
-                    <div id="calendar" class="mt-4 p-3 rounded shadow-sm" style="background-color: var(--card-bg); color: var(--card-text); min-height: 500px; border: 1px solid var(--border-color);"></div>
                 </div>
             </div>
         </div>
@@ -491,19 +425,14 @@
 
 </div>
 
-<!-- FullCalendar CSS -->
-<link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet" />
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<!-- SortableJS y FullCalendar JS -->
+<!-- SortableJS JS -->
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales-all.min.js"></script>
 <!-- Aseguramos que Bootstrap JS está cargado para que funcionen las pestañas -->
 <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
 let currentProjectId = 0;
-let calendarInstance = null;
 
 $(document).ready(function () {
     // Evitar caché de AJAX y manejar expiración de sesión (401)
@@ -530,39 +459,6 @@ $(document).ready(function () {
     });
 
     loadProjects();
-
-    // Inicializar Calendario
-    let calendarEl = document.getElementById('calendar');
-    if (calendarEl) {
-        calendarInstance = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'dayGridMonth',
-            locale: 'es',
-            themeSystem: 'bootstrap',
-            headerToolbar: {
-                left: 'prev,next today',
-                center: 'title',
-                right: 'dayGridMonth,timeGridWeek,listMonth'
-            },
-            height: 'auto',
-            contentHeight: 'auto',
-            events: [],
-            eventDisplay: 'block',
-            eventTimeFormat: {
-                hour: '2-digit',
-                minute: '2-digit',
-                meridiem: false
-            }
-        });
-        calendarInstance.render();
-        updateCalendarTheme();
-    }
-
-    // Redibujar calendario al cambiar a la pestaña de Cronograma
-    $('a[data-bs-toggle="tab"], button[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
-        if(e.target.id === 'cronograma-tab' && calendarInstance) {
-            calendarInstance.render();
-        }
-    });
 });
 
 function loadProjects() {
@@ -612,20 +508,11 @@ function loadDashboard() {
         
         let container = $('#sprintsContainer');
         container.empty();
-        let events = [];
 
         sprints.forEach(s => {
             console.log('➕ Agregando sprint:', s.name);
             sprintSelect.append(`<option value="${s.id}">${s.name}</option>`);
             container.append(createSwimlaneHtml(s.id, s.name, s.startDate, s.endDate));
-            
-            // Agregamos el sprint al calendario
-            events.push({
-                title: s.name,
-                start: s.startDate.split('/').reverse().join('-'), // DD/MM/YYYY a YYYY-MM-DD
-                end: s.endDate.split('/').reverse().join('-'),
-                color: '#0d6efd'
-            });
         });
         
         // Swimlane de Backlog en el tablero
@@ -691,18 +578,27 @@ function loadDashboard() {
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
                         <div class="fw-bold text-wrap text-break" style="flex: 1; color: var(--card-text); word-break: break-word;">${task.title}</div>
                         ${statusBadge}
+                <div class="task-card shadow-sm fade-in" data-id="${task.id}">
+                    <div class="fw-bold text-wrap text-break">${task.title}</div>
+                    <div class="small text-muted mb-2">TASK-${task.id}</div>
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                        <span class="badge bg-light text-dark border text-truncate" style="max-width: 100%;" title="${task.assignedUser}">👤 ${task.assignedUser}</span>
                     </div>
                     <div class="small" style="color: var(--card-text); opacity: 0.7; font-size: 0.75rem;">TASK-${task.id}</div>
                     <div style="display: flex; justify-content: flex-start; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 6px;">
                         <span class="badge" style="color: var(--card-text); border-color: var(--border-color) !important; background-color: rgba(0,0,0,0.05); max-width: 100%; text-overflow: ellipsis; overflow: hidden; font-size: 0.70rem;" title="${task.assignedUser}">👤 ${task.assignedUser}</span>
                     </div>
                     ${task.startDate ? `<div style="font-size: 0.70rem; color: var(--card-text); opacity: 0.8; margin-top: 6px;">📅 ${task.startDate}${task.endDate ? ` - ${task.endDate}` : ''}</div>` : ''}
+                    ${task.startDate && task.endDate ? `<div class="text-muted mt-1" style="font-size: 0.70rem;">📅 ${task.startDate} - ${task.endDate}</div>` : ''}
                 </div>`;
                 
                 // Verificar que exista el contenedor antes de agregar
                 let todoList = $(`#todoList_${sId}`);
                 let inProgressList = $(`#inProgressList_${sId}`);
                 let doneList = $(`#doneList_${sId}`);
+                if(task.status === 1) $(`#inProgressList_${sId}`).append(card);
+                else if (task.status === 2) $(`#doneList_${sId}`).append(card);
+                else $(`#todoList_${sId}`).append(card);
 
                 if(task.status === 1) {
                     if(inProgressList.length) inProgressList.append(card);
@@ -717,69 +613,35 @@ function loadDashboard() {
                     else console.warn('⚠️ No encontrado: #todoList_' + sId);
                 }
 
-                // 2. Configuración de eventos para el calendario basado en fecha de inicio
-                if (task.startDate) {
-                    let taskColor = '#6c757d'; // To Do (Gris)
-                    if (task.status == 1) taskColor = '#0d6efd'; // In Progress (Azul)
-                    if (task.status == 2) taskColor = '#198754'; // Done (Verde)
-
-                    // Convertir DD/MM/YYYY a YYYY-MM-DD
-                    let [day, month, year] = task.startDate.split('/');
-                    let startISO = `${year}-${month}-${day}`;
-                    
-                    let endISO = startISO;
-                    if(task.endDate) {
-                        let [endDay, endMonth, endYear] = task.endDate.split('/');
-                        endISO = `${endYear}-${endMonth}-${endDay}`;
-                    }
-
-                    events.push({
-                        title: `[${task.taskType || 'Tarea'}] ${task.title}`,
-                        start: startISO,
-                        end: endISO,
-                        color: taskColor,
-                        extendedProps: {
-                            assignee: task.assignedUser
-                        }
-                    });
-                }
-
                 // Agregar a la lista de la pestaña Backlog
                 let statusTextBacklog = ['To Do', 'In Progress', 'Done'][task.status] || 'To Do';
+                let statusText = ['To Do', 'In Progress', 'Done'][task.status] || 'To Do';
                 $('#backlogList').append(`
                     <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2" style="background-color: var(--card-bg); color: var(--card-text); border-color: var(--border-color);">
+                    <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2" style="background-color: var(--card-bg); color: var(--text-color); border-color: var(--border-color);">
                         <div class="d-flex flex-column">
                             <div><span class="fw-bold me-2">TASK-${task.id}</span><span class="fw-bold">${task.title}</span></div>
                             <div class="small mt-1" style="color: var(--card-text); opacity: 0.8;">
+                            <div class="small text-muted mt-1">
                                 <span class="me-3">👤 ${task.assignedUser}</span>
                                 ${task.startDate && task.endDate ? `<span>📅 ${task.startDate} - ${task.endDate}</span>` : task.startDate ? `<span>📅 ${task.startDate}</span>` : ''}
+                                ${task.startDate && task.endDate ? `<span>📅 ${task.startDate} - ${task.endDate}</span>` : ''}
                             </div>
                         </div>
                         <span class="badge bg-secondary rounded-pill">${statusTextBacklog}</span>
+                        <span class="badge bg-secondary rounded-pill">${statusText}</span>
                     </li>`);
             });
 
-            console.log('✅ Total de eventos en calendario:', events.length);
             initSortable();
             $('#project-tabs button').prop('disabled', false); // Desbloquear botones al finalizar
         }).fail(function(err) {
             console.error('❌ Error al cargar tareas:', err);
+        }).fail(function() {
             $('#project-tabs button').prop('disabled', false);
             $('#sprintsContainer').html('<div class="text-center mt-5 text-danger">❌ Error al cargar tareas. Intenta recargar la página.</div>');
+            $('#sprintsContainer').html('<div class="text-center mt-5 text-danger">Error al cargar tareas. Intenta recargar la página.</div>');
         });
-
-        // Refrescar el calendario
-        if (calendarInstance) {
-            // Limpiar eventos existentes
-            calendarInstance.getEvents().forEach(event => event.remove());
-            
-            // Agregar los nuevos eventos
-            events.forEach(event => {
-                calendarInstance.addEvent(event);
-            });
-            
-            updateCalendarTheme();
-        }
     }).fail(function() {
         $('#project-tabs button').prop('disabled', false);
         $('#sprintsContainer').html('<div class="text-center mt-5 text-danger">Error al cargar sprints. Intenta recargar la página.</div>');
@@ -897,23 +759,6 @@ function addSprint() {
     });
 }
 
-function updateCalendarTheme() {
-    if (!calendarInstance) return;
-    
-    let calendarEl = document.getElementById('calendar');
-    if (calendarEl) {
-        let isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        
-        if (isDark) {
-            calendarEl.style.backgroundColor = '#22272b';
-            calendarEl.style.color = '#b6c2cf';
-        } else {
-            calendarEl.style.backgroundColor = '#ffffff';
-            calendarEl.style.color = '#172b4d';
-        }
-    }
-}
-
 function openEditTaskModal(element) {
     let card = $(element);
     $('#editTaskId').val(card.data('id'));
@@ -976,7 +821,6 @@ $(document).ready(function() {
     // Cargar tema guardado
     let savedTheme = localStorage.getItem('theme') || 'light';
     htmlElement.setAttribute('data-theme', savedTheme);
-    updateCalendarTheme();
     
     if (themeToggle) {
         themeToggle.addEventListener('click', function() {
@@ -984,7 +828,6 @@ $(document).ready(function() {
             let newTheme = currentTheme === 'light' ? 'dark' : 'light';
             htmlElement.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
-            updateCalendarTheme();
         });
     }
 });
