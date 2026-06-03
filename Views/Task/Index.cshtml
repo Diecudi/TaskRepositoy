@@ -405,9 +405,10 @@ function loadDashboard() {
             
             // Agregamos el sprint al calendario
             events.push({
-                title: `[Sprint] ${s.name}`,
+                title: s.name,
                 start: s.startDate.split('/').reverse().join('-'), // DD/MM/YYYY a YYYY-MM-DD
-                color: '#6f42c1' // Diferenciamos Sprints con color morado
+                end: s.endDate.split('/').reverse().join('-'),
+                color: '#0d6efd'
             });
         });
         
@@ -419,14 +420,23 @@ function loadDashboard() {
 
             tasks.forEach(task => {
                 let sId = task.sprintId || 0;
-                
+
+                // 1. Aquí va la generación de la insignia de estado (statusBadge)
                 let statusBadge = '';
-                if(task.status === 1) statusBadge = '<span class="status-badge badge bg-primary">In Progress</span>';
-                else if(task.status === 2) statusBadge = '<span class="status-badge badge bg-success">Done</span>';
+                if(task.status == 1) statusBadge = '<span class="status-badge badge bg-primary">In Progress</span>';
+                else if(task.status == 2) statusBadge = '<span class="status-badge badge bg-success">Done</span>';
                 else statusBadge = '<span class="status-badge badge bg-secondary">To Do</span>';
 
                 let card = `
-                <div class="task-card shadow-sm fade-in" data-id="${task.id}">
+                <div class="task-card shadow-sm fade-in" style="cursor: pointer;"
+                     data-id="${task.id}" 
+                     data-title="${task.title}" 
+                     data-user="${task.assignedUser}" 
+                     data-type="${task.taskType}" 
+                     data-start="${task.startDate || ''}" 
+                     data-end="${task.endDate || ''}"
+                     data-sprint="${task.sprintId || 0}"
+                     onclick="openEditTaskModal(this)">
                     <div class="d-flex justify-content-between align-items-start mb-2">
                         <div class="fw-bold text-wrap text-break pe-2">${task.title}</div>
                         ${statusBadge}
@@ -435,18 +445,18 @@ function loadDashboard() {
                     <div class="d-flex justify-content-between align-items-center mt-2">
                         <span class="badge border text-truncate" style="color: var(--text-color); border-color: var(--border-color) !important; max-width: 100%;" title="${task.assignedUser}">👤 ${task.assignedUser}</span>
                     </div>
-                    ${task.startDate && task.endDate ? `<div class="mt-1" style="font-size: 0.70rem; color: var(--text-color); opacity: 0.8;">📅 ${task.startDate} - ${task.endDate}</div>` : ''}
+                    ${task.startDate ? `<div class="mt-1" style="font-size: 0.70rem; color: var(--text-color); opacity: 0.8;">📅 ${task.startDate} ${task.endDate ? `- ${task.endDate}` : ''}</div>` : ''}
                 </div>`;
                 
                 if(task.status === 1) $(`#inProgressList_${sId}`).append(card);
                 else if (task.status === 2) $(`#doneList_${sId}`).append(card);
                 else $(`#todoList_${sId}`).append(card);
 
-                // Agregamos la tarea al calendario usando el color de su estado
+                // 2. Aquí va la configuración de color y la adición al calendario
                 if (task.startDate) {
                     let taskColor = '#6c757d'; // To Do (Gris)
-                    if (task.status === 1) taskColor = '#0d6efd'; // In Progress (Azul)
-                    if (task.status === 2) taskColor = '#198754'; // Done (Verde)
+                    if (task.status == 1) taskColor = '#0d6efd'; // In Progress (Azul)
+                    if (task.status == 2) taskColor = '#198754'; // Done (Verde)
 
                     events.push({
                         title: `[Tarea] ${task.title}`,
@@ -471,16 +481,16 @@ function loadDashboard() {
             });
             initSortable();
             $('#project-tabs button').prop('disabled', false); // Desbloquear botones al finalizar
-
-            // MUY IMPORTANTE: Refrescar el calendario AQUÍ para asegurar que las tareas ya están en el arreglo 'events'
-            if (calendarInstance) {
-                calendarInstance.removeAllEvents();
-                calendarInstance.addEventSource(events);
-            }
         }).fail(function() {
             $('#project-tabs button').prop('disabled', false);
             $('#sprintsContainer').html('<div class="text-center mt-5 text-danger">Error al cargar tareas. Intenta recargar la página.</div>');
         });
+
+        // Refrescar el calendario
+        if (calendarInstance) {
+            calendarInstance.removeAllEvents();
+            calendarInstance.addEventSource(events);
+        }
     }).fail(function() {
         $('#project-tabs button').prop('disabled', false);
         $('#sprintsContainer').html('<div class="text-center mt-5 text-danger">Error al cargar sprints. Intenta recargar la página.</div>');
@@ -519,7 +529,7 @@ function initSortable() {
             const newStatus = evt.to.getAttribute('data-status');
             const newSprintId = evt.to.getAttribute('data-sprint-id');
 
-            // Actualizamos la etiqueta de estado visualmente en tiempo real
+            // 3. Este bloque cambia el cuadro en tiempo real al soltar la tarjeta
             let badge = $(evt.item).find('.status-badge');
             if (badge.length > 0) {
                 badge.removeClass('bg-secondary bg-primary bg-success');
