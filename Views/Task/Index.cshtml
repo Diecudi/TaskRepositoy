@@ -310,45 +310,15 @@
 let currentProjectId = 0;
 
 $(document).ready(function () {
-    loadTasks();
     loadProjects();
-});
-
-    // Inicializar SortableJS para arrastrar tarjetas
-    const sortableOptions = {
-        group: 'kanban', // Permite mover entre listas
-        animation: 150,
-        ghostClass: 'opacity-50', // Transparencia al arrastrar
-        onEnd: function (evt) {
-            const taskId = evt.item.getAttribute('data-id');
-            const toList = evt.to.id;
-            
-            let newStatus = 0; // ToDo
-            if (toList === 'inProgressList') newStatus = 1;
-            if (toList === 'doneList') newStatus = 2;
-
-            if (taskId) {
-                // Actualizar estado permanentemente en MySQL
-                $.post('/Task/UpdateTaskStatus', { id: taskId, status: newStatus }, function() {
-                    updateCounts();
-                });
-            } else {
-                updateCounts();
-            }
-        }
-    };
-
-    new Sortable(document.getElementById('todoList'), sortableOptions);
-    new Sortable(document.getElementById('inProgressList'), sortableOptions);
-    new Sortable(document.getElementById('doneList'), sortableOptions);
-
+    
     // Funcionalidad al hacer clic en los proyectos
     $(document).on('shown.bs.tab', 'button[data-bs-toggle="pill"]', function (e) {
         $(e.target).removeClass('text-muted');
         $(e.relatedTarget).addClass('text-muted');
-        
-        // Simular que recargamos el entorno al cambiar de proyecto
-        loadTasks();
+    });
+});
+
 function loadProjects() {
     $.get('/Task/GetProjects', function(projects) {
         $('#project-tabs').empty();
@@ -364,12 +334,8 @@ function loadProjects() {
             currentProjectId = 0;
         }
     });
-});
 }
 
-function loadTasks() {
-    $.get('/Task/GetTasks', function(tasks) {
-        $('#todoList, #inProgressList, #doneList, #backlogList').empty();
 function selectProject(id) {
     currentProjectId = id;
     $('#project-tabs button').removeClass('active').addClass('text-muted');
@@ -385,37 +351,6 @@ function loadDashboard() {
         sprintSelect.empty();
         sprintSelect.append('<option value="0">(Sin Sprint / Backlog)</option>');
         
-        let todo = 0, inprog = 0, done = 0;
-        
-        tasks.forEach(function(task) {
-            let card = `<div class="task-card shadow-sm fade-in" data-id="${task.id}">
-                            <div class="fw-bold">${task.title}</div>
-                            <small class="text-muted">TASK-${task.id || Math.floor(Math.random() * 1000)}</small>
-                        </div>`;
-                        
-            let listItem = `<li class="list-group-item d-flex justify-content-between align-items-center" style="background-color: var(--card-bg); color: var(--text-color); border-color: var(--border-color);">
-                                <div>
-                                    <span class="fw-bold me-2">TASK-${task.id || Math.floor(Math.random() * 1000)}</span>
-                                    <span>${task.title}</span>
-                                </div>
-                                <span class="badge bg-secondary rounded-pill">Status: ${task.status}</span>
-                            </li>`;
-
-            // Añadir al Backlog en formato de lista
-            $('#backlogList').append(listItem);
-                        
-            // Asumiendo que tu endpoint ahora retorna el Status (0=ToDo, 1=InProgress, etc.)
-            // Temporalmente colocamos todo en ToDo si no tiene estado
-            if(task.status === 1) {
-                $('#inProgressList').append(card);
-                inprog++;
-            } else if (task.status === 2 || task.status === 3) {
-                $('#doneList').append(card);
-                done++;
-            } else {
-                $('#todoList').append(card);
-                todo++;
-            }
         let container = $('#sprintsContainer');
         container.empty();
 
@@ -425,9 +360,6 @@ function loadDashboard() {
             container.append(createSwimlaneHtml(s.id, s.name, s.startDate, s.endDate));
         });
         
-        $('#count-todo').text(todo);
-        $('#count-inprogress').text(inprog);
-        $('#count-done').text(done);
         // 2. Crear Swimlane para el Backlog (Tareas sin Sprint)
         container.append(createSwimlaneHtml(0, 'Backlog General', '', ''));
 
@@ -450,10 +382,6 @@ function loadDashboard() {
     });
 }
 
-function updateCounts() {
-    $('#count-todo').text($('#todoList').children().length);
-    $('#count-inprogress').text($('#inProgressList').children().length);
-    $('#count-done').text($('#doneList').children().length);
 function createSwimlaneHtml(sprintId, name, start, end) {
     let dates = start ? `<span class="badge bg-info text-dark ms-2 fw-normal">${start} - ${end}</span>` : '';
     return `
@@ -510,15 +438,11 @@ function addTask() {
         assignedUser: user,
         taskType: type,
         startDate: startDate,
-        endDate: endDate
         endDate: endDate,
         projectId: currentProjectId,
         sprintId: sprintId
     }, function() {
-        loadTasks();
         $('#taskForm')[0].reset();
-        
-        // Cerrar el modal
         $('#addTaskModal').modal('hide');
         $('.modal-backdrop').remove();
         $('body').removeClass('modal-open').css('padding-right', '');
@@ -531,13 +455,6 @@ function addProject() {
     let desc = $('#projectDesc').val();
     if(!name) return;
     
-    // Simulamos que se añade a la lista visualmente
-    $('#project-tabs').append(`<button class="nav-link mb-2 fw-bold text-start text-muted" data-bs-toggle="pill" type="button" role="tab">${name}</button>`);
-    
-    $('#projectForm')[0].reset();
-    $('#addProjectModal').modal('hide');
-    $('.modal-backdrop').remove();
-    $('body').removeClass('modal-open').css('padding-right', '');
     $.post('/Task/AddProject', { name: name, description: desc }, function() {
         $('#projectForm')[0].reset();
         $('#addProjectModal').modal('hide');
@@ -550,15 +467,10 @@ function addProject() {
 function addSprint() {
     if(currentProjectId === 0) return alert('Debes seleccionar un proyecto primero');
     let name = $('#sprintName').val();
-    if(!name) return;
     let start = $('#sprintStartDate').val();
     let end = $('#sprintEndDate').val();
     if(!name || !start || !end) return;
     
-    $('#sprintForm')[0].reset();
-    $('#addSprintModal').modal('hide');
-    $('.modal-backdrop').remove();
-    $('body').removeClass('modal-open').css('padding-right', '');
     $.post('/Task/AddSprint', { name: name, startDate: start, endDate: end, projectId: currentProjectId }, function() {
         $('#sprintForm')[0].reset();
         $('#addSprintModal').modal('hide');
