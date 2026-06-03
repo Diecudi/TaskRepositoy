@@ -57,19 +57,6 @@
         border-radius: 10px;
     }
 
-    /* Estilos para nav-pills de proyectos */
-    .nav-pills .nav-link {
-        color: var(--text-color);
-        background-color: var(--card-bg);
-        border: 1px solid var(--border-color);
-        transition: all 0.2s;
-    }
-    .nav-pills .nav-link.active {
-        background-color: #0d6efd;
-        color: #fff;
-        border-color: #0d6efd;
-    }
-
     /* Sobrescribir colores de los tabs para modo nocturno */
     .nav-tabs {
         border-bottom-color: var(--border-color);
@@ -104,6 +91,9 @@
         </div>
         
         <div class="d-flex align-items-center gap-3">
+            <button id="themeToggle" class="btn btn-outline-secondary rounded-circle" title="Modo Nocturno">
+                &#127183;
+            </button>
             <!-- Perfil de Usuario con Foto -->
             <div class="d-flex align-items-center gap-2">
                 <span>User Admin</span>
@@ -120,8 +110,9 @@
                     <h6 class="mb-0 fw-bold text-uppercase text-secondary">Proyectos</h6>
                     <button class="btn btn-sm btn-primary rounded-circle" data-bs-toggle="modal" data-bs-target="#addProjectModal" title="Nuevo Proyecto" style="width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">+</button>
                 </div>
-                <div class="nav flex-column nav-pills gap-2" id="project-tabs" role="tablist" aria-orientation="vertical">
-                    <!-- Proyectos dinámicos -->
+                <div class="nav flex-column nav-pills" id="project-tabs" role="tablist" aria-orientation="vertical">
+                    <button class="nav-link active mb-2 fw-bold text-start" data-bs-toggle="pill" type="button" role="tab">Proyecto Alpha</button>
+                    <button class="nav-link mb-2 fw-bold text-start text-muted" data-bs-toggle="pill" type="button" role="tab" style="background-color: var(--card-bg); border: 1px solid var(--border-color);">Proyecto Beta</button>
                 </div>
             </div>
         </div>
@@ -145,7 +136,7 @@
                 <!-- VISTA: TABLERO KANBAN -->
                 <div class="tab-pane fade show active" id="tablero" role="tabpanel" aria-labelledby="tablero-tab">
                     <div id="sprintsContainer">
-                        <!-- Swimlanes de los Sprints generados automáticamente -->
+                        <!-- Swimlanes generados por JS -->
                     </div>
                 </div>
 
@@ -209,12 +200,6 @@
                                 <option value="Historia">Historia</option>
                                 <option value="Bug">Bug (Error)</option>
                                 <option value="Tarea">Tarea</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="taskSprint" class="form-label">Sprint (Opcional)</label>
-                            <select class="form-select" id="taskSprint">
-                                <option value="0">(Sin Sprint / Backlog)</option>
                             </select>
                         </div>
                         <div class="row">
@@ -301,19 +286,18 @@
 </div>
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<!-- SortableJS para Drag & Drop -->
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 <!-- Aseguramos que Bootstrap JS está cargado para que funcionen las pestañas -->
 <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
 let currentProjectId = 0;
+let calendarInstance = null;
 
 $(document).ready(function () {
-    // Desactivar caché de AJAX para que las tareas se refresquen al instante desde la base de datos
+    // Evitar caché de AJAX y manejar expiración de sesión (401)
     $.ajaxSetup({ 
         cache: false,
-        error: function (jqXHR, textStatus, errorThrown) {
+        error: function (jqXHR) {
             if (jqXHR.status === 401) {
                 alert("Tu sesión ha expirado por seguridad. Por favor, inicia sesión nuevamente.");
                 window.location.href = '/Account/Login';
@@ -321,13 +305,23 @@ $(document).ready(function () {
         }
     });
 
-
     loadProjects();
-    
-    // Funcionalidad al hacer clic en los proyectos
-    $(document).on('shown.bs.tab', 'button[data-bs-toggle="pill"]', function (e) {
-        $(e.target).removeClass('text-muted');
-        $(e.relatedTarget).addClass('text-muted');
+
+    // Inicializar Calendario
+    let calendarEl = document.getElementById('calendar');
+    calendarInstance = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        locale: 'es',
+        themeSystem: 'standard',
+        events: []
+    });
+    calendarInstance.render();
+
+    // Redibujar calendario al cambiar a la pestaña de Cronograma
+    $('a[data-bs-toggle="tab"], button[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
+        if(e.target.id === 'cronograma-tab') {
+            calendarInstance.render();
+        }
     });
 });
 
@@ -365,17 +359,24 @@ function loadDashboard() {
         
         let container = $('#sprintsContainer');
         container.empty();
+        let events = [];
 
-        // 1. Crear Swimlanes por Sprint
         sprints.forEach(s => {
             sprintSelect.append(`<option value="${s.id}">${s.name}</option>`);
             container.append(createSwimlaneHtml(s.id, s.name, s.startDate, s.endDate));
+            
+            // Agregamos el sprint al calendario
+            events.push({
+                title: s.name,
+                start: s.startDate.split('/').reverse().join('-'), // DD/MM/YYYY a YYYY-MM-DD
+                end: s.endDate.split('/').reverse().join('-'),
+                color: '#0d6efd'
+            });
         });
         
-        // 2. Crear Swimlane para el Backlog (Tareas sin Sprint)
+        // Swimlane de Backlog en el tablero
         container.append(createSwimlaneHtml(0, 'Backlog General', '', ''));
 
-        // 3. Cargar Tareas
         $.get('/Task/GetTasks?projectId=' + currentProjectId, function(tasks) {
             $('#backlogList').empty();
 
@@ -387,10 +388,16 @@ function loadDashboard() {
                 else if (task.status === 2) $(`#doneList_${sId}`).append(card);
                 else $(`#todoList_${sId}`).append(card);
 
-                $('#backlogList').append(`<li class="list-group-item d-flex justify-content-between align-items-center" style="background-color: var(--card-bg); color: var(--text-color); border-color: var(--border-color);"><div><span class="fw-bold me-2">TASK-${task.id}</span><span>${task.title}</span></div><span class="badge bg-secondary rounded-pill">Status: ${task.status}</span></li>`);
+                // Agregar a la lista de la pestaña Backlog
+                let statusText = ['To Do', 'In Progress', 'Done'][task.status] || 'To Do';
+                $('#backlogList').append(`<li class="list-group-item d-flex justify-content-between align-items-center" style="background-color: var(--card-bg); color: var(--text-color); border-color: var(--border-color);"><div><span class="fw-bold me-2">TASK-${task.id}</span><span>${task.title}</span></div><span class="badge bg-secondary rounded-pill">${statusText}</span></li>`);
             });
             initSortable();
         });
+
+        // Refrescar el calendario
+        calendarInstance.removeAllEvents();
+        calendarInstance.addEventSource(events);
     });
 }
 
