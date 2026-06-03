@@ -878,11 +878,57 @@ function updateCalendarTheme() {
 }
 
 function openEditTaskModal(element) {
-    // Placeholder para editar tarea (puede implementarse después)
-    let taskId = $(element).data('id');
-    let title = $(element).data('title');
-    console.log('Abriendo tarea:', taskId, title);
-    // Aquí se podría abrir un modal de edición
+    let card = $(element);
+    $('#editTaskId').val(card.data('id'));
+    $('#editTaskTitle').val(card.data('title'));
+    $('#editTaskUser').val(card.data('user'));
+    $('#editTaskType').val(card.data('type'));
+    
+    // Formatear fecha para el control input type="date"
+    let start = card.data('start') || '';
+    if (start.includes('/')) $('#editTaskStartDate').val(start.split('/').reverse().join('-'));
+    else $('#editTaskStartDate').val(start);
+    
+    let end = card.data('end') || '';
+    if (end.includes('/')) $('#editTaskEndDate').val(end.split('/').reverse().join('-'));
+    else $('#editTaskEndDate').val(end);
+
+    $('#editTaskSprint').html($('#taskSprint').html()); // Copiar opciones del modal de añadir
+    $('#editTaskSprint').val(card.data('sprint') || 0);
+
+    $('#editTaskModal').modal('show');
+}
+
+function updateTask() {
+    let id = $('#editTaskId').val();
+    let title = $('#editTaskTitle').val();
+    if(!title) return;
+
+    $.post('/Task/UpdateTask', { 
+        id: id,
+        title: title,
+        assignedUser: $('#editTaskUser').val(),
+        taskType: $('#editTaskType').val(),
+        startDate: $('#editTaskStartDate').val(),
+        endDate: $('#editTaskEndDate').val(),
+        sprintId: $('#editTaskSprint').val()
+    }, function() {
+        $('#editTaskModal').modal('hide');
+        $('.modal-backdrop').remove();
+        $('body').removeClass('modal-open').css('padding-right', '');
+        loadDashboard();
+    });
+}
+
+function deleteTask() {
+    if(confirm("¿Estás seguro de que deseas eliminar esta tarea permanentemente?")) {
+        $.post('/Task/DeleteTask', { id: $('#editTaskId').val() }, function() {
+            $('#editTaskModal').modal('hide');
+            $('.modal-backdrop').remove();
+            $('body').removeClass('modal-open').css('padding-right', '');
+            loadDashboard();
+        });
+    }
 }
 
 // Cambio de tema
