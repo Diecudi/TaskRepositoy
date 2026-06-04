@@ -222,6 +222,53 @@
         </div>
     </div>
 
+    <!-- MODAL: EDITAR TAREA -->
+    <div class="modal fade" id="editTaskModal" tabindex="-1" aria-labelledby="editTaskModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content" style="background-color: var(--card-bg); color: var(--text-color);">
+                <div class="modal-header" style="border-bottom-color: var(--border-color);">
+                    <h5 class="modal-title fw-bold" id="editTaskModalLabel">Editar Tarea</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editTaskForm">
+                        <input type="hidden" id="editTaskId">
+                        <div class="mb-3">
+                            <label for="editTaskTitle" class="form-label">Nombre de la tarea</label>
+                            <input type="text" class="form-control" id="editTaskTitle" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editTaskType" class="form-label">Tipo de Tarea</label>
+                            <select class="form-select" id="editTaskType">
+                                <option value="Historia">Historia</option>
+                                <option value="Bug">Bug (Error)</option>
+                                <option value="Tarea">Tarea</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editTaskSprint" class="form-label">Sprint</label>
+                            <select class="form-select" id="editTaskSprint"></select>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editTaskStartDate" class="form-label">Fecha de Inicio</label>
+                                <input type="date" class="form-control" id="editTaskStartDate">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editTaskEndDate" class="form-label">Fecha de Fin</label>
+                                <input type="date" class="form-control" id="editTaskEndDate">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer" style="border-top-color: var(--border-color);">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="updateTask()">Actualizar Tarea</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL: AÑADIR PROYECTO -->
     <div class="modal fade" id="addProjectModal" tabindex="-1" aria-labelledby="addProjectModalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -369,7 +416,13 @@ function loadDashboard() {
                 let sId = task.sprintId || 0;
                 let card = `
                 <div class="task-card shadow-sm fade-in" data-id="${task.id}">
-                    <div class="fw-bold text-wrap text-break">${task.title}</div>
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="fw-bold text-wrap text-break pe-2">${task.title}</div>
+                        <div class="btn-group">
+                            <button class="btn btn-sm py-0 px-1 border-0" style="color: var(--text-color);" onclick="openEditTaskModal(${task.id}, '${task.title.replace(/'/g, "\\'").replace(/"/g, "&quot;")}', '${task.taskType}', '${task.startDate}', '${task.endDate}', ${task.sprintId || 0})" title="Editar">&#9998;</button>
+                            <button class="btn btn-sm py-0 px-1 border-0 text-danger" onclick="deleteTask(${task.id})" title="Eliminar">&times;</button>
+                        </div>
+                    </div>
                     <div class="small text-muted mb-2">TASK-${task.id}</div>
                     <div class="d-flex justify-content-between align-items-center mt-2">
                         <span class="badge bg-light text-dark border text-truncate" style="max-width: 100%;" title="${task.assignedUser}">👤 ${task.assignedUser}</span>
@@ -392,7 +445,11 @@ function loadDashboard() {
                                 ${task.startDate && task.endDate ? `<span>📅 ${task.startDate} - ${task.endDate}</span>` : ''}
                             </div>
                         </div>
-                        <span class="badge bg-secondary rounded-pill">${statusText}</span>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-secondary rounded-pill">${statusText}</span>
+                            <button class="btn btn-sm py-0 px-1 border-0" style="color: var(--text-color);" onclick="openEditTaskModal(${task.id}, '${task.title.replace(/'/g, "\\'").replace(/"/g, "&quot;")}', '${task.taskType}', '${task.startDate}', '${task.endDate}', ${task.sprintId || 0})" title="Editar">&#9998;</button>
+                            <button class="btn btn-sm py-0 px-1 border-0 text-danger" onclick="deleteTask(${task.id})" title="Eliminar">&times;</button>
+                        </div>
                     </li>`);
             });
             initSortable();
@@ -503,5 +560,68 @@ function addSprint() {
         $('body').removeClass('modal-open').css('padding-right', '');
         loadDashboard();
     });
+}
+
+function openEditTaskModal(id, title, type, startDate, endDate, sprintId) {
+    $('#editTaskId').val(id);
+    $('#editTaskTitle').val(title);
+    $('#editTaskType').val(type);
+    
+    // Formatear fechas de dd/MM/yyyy a yyyy-MM-dd si existen
+    if(startDate) {
+        let parts = startDate.split('/');
+        if(parts.length === 3) $('#editTaskStartDate').val(`${parts[2]}-${parts[1]}-${parts[0]}`);
+    } else {
+        $('#editTaskStartDate').val('');
+    }
+    
+    if(endDate) {
+        let parts = endDate.split('/');
+        if(parts.length === 3) $('#editTaskEndDate').val(`${parts[2]}-${parts[1]}-${parts[0]}`);
+    } else {
+        $('#editTaskEndDate').val('');
+    }
+    
+    let sprintSelect = $('#editTaskSprint');
+    sprintSelect.empty();
+    $('#taskSprint option').each(function() {
+        sprintSelect.append($(this).clone());
+    });
+    $('#editTaskSprint').val(sprintId);
+    
+    $('#editTaskModal').modal('show');
+}
+
+function updateTask() {
+    let id = $('#editTaskId').val();
+    let title = $('#editTaskTitle').val();
+    let type = $('#editTaskType').val();
+    let startDate = $('#editTaskStartDate').val();
+    let endDate = $('#editTaskEndDate').val();
+    let sprintId = $('#editTaskSprint').val();
+    
+    if(!title) return;
+
+    $.post('/Task/UpdateTask', { 
+        id: id,
+        title: title,
+        taskType: type,
+        startDate: startDate,
+        endDate: endDate,
+        sprintId: sprintId
+    }, function() {
+        $('#editTaskModal').modal('hide');
+        $('.modal-backdrop').remove();
+        $('body').removeClass('modal-open').css('padding-right', '');
+        loadDashboard();
+    });
+}
+
+function deleteTask(id) {
+    if(confirm('¿Estás seguro de que deseas eliminar esta tarea permanentemente?')) {
+        $.post('/Task/DeleteTask', { id: id }, function() {
+            loadDashboard();
+        });
+    }
 }
 </script>
