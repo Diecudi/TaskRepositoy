@@ -94,15 +94,12 @@
     <!-- Cabecera del Dashboard -->
     <header class="d-flex justify-content-between align-items-center pb-3 mb-4 border-bottom" style="border-color: var(--border-color) !important;">
         <div class="d-flex align-items-center gap-3">
-            <h2 class="mb-0 fw-bold">JiraClone</h2>
+            <h2 class="mb-0 fw-bold">Taskerter</h2>
             <span class="badge bg-primary rounded-pill">Sprint 1</span>
             <button class="btn btn-sm btn-outline-primary rounded-pill" data-bs-toggle="modal" data-bs-target="#addSprintModal">Nuevo Sprint</button>
         </div>
         
         <div class="d-flex align-items-center gap-3">
-            <button id="themeToggle" class="btn btn-outline-secondary rounded-circle" title="Modo Nocturno">
-                &#127183;
-            </button>
             <!-- Perfil de Usuario con Foto -->
             <div class="d-flex align-items-center gap-2">
                 <span>User Admin</span>
@@ -613,14 +610,95 @@ function updateTask() {
         $('#editTaskModal').modal('hide');
         $('.modal-backdrop').remove();
         $('body').removeClass('modal-open').css('padding-right', '');
-        loadDashboard();
+        
+        // Actualización dinámica en el DOM (Sin recargar datos)
+        let startFormatted = '';
+        if (startDate) {
+            let parts = startDate.split('-');
+            if (parts.length === 3) startFormatted = `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+        
+        let endFormatted = '';
+        if (endDate) {
+            let parts = endDate.split('-');
+            if (parts.length === 3) endFormatted = `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+
+        let dateText = (startFormatted && endFormatted) ? `📅 ${startFormatted} - ${endFormatted}` : '';
+        let escapedTitle = title.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+
+        // 1. Actualizar la tarjeta en el Tablero Kanban
+        let taskCard = $(`.task-card[data-id="${id}"]`);
+        if (taskCard.length) {
+            taskCard.find('.fw-bold.text-wrap').text(title);
+            
+            let editBtn = taskCard.find(`button[title="Editar"]`);
+            editBtn.attr('onclick', `openEditTaskModal(${id}, '${escapedTitle}', '${type}', '${startFormatted}', '${endFormatted}', ${sprintId || 0})`);
+            
+            let dateDiv = taskCard.find('.text-muted.mt-1');
+            if (dateText) {
+                if (dateDiv.length) {
+                    dateDiv.text(dateText);
+                } else {
+                    taskCard.append(`<div class="text-muted mt-1" style="font-size: 0.70rem;">${dateText}</div>`);
+                }
+            } else if (dateDiv.length) {
+                dateDiv.remove();
+            }
+
+            // Si el Sprint ha cambiado en la edición, movemos la tarjeta
+            let currentList = taskCard.closest('.task-list');
+            let currentSprintId = currentList.data('sprint-id');
+            if (currentSprintId != (sprintId || 0)) {
+                let status = currentList.data('status');
+                let targetListId = '';
+                if (status == 0) targetListId = `#todoList_${sprintId || 0}`;
+                else if (status == 1) targetListId = `#inProgressList_${sprintId || 0}`;
+                else if (status == 2) targetListId = `#doneList_${sprintId || 0}`;
+                
+                taskCard.fadeOut(200, function() {
+                    $(targetListId).append(taskCard);
+                    taskCard.fadeIn(200);
+                });
+            }
+        }
+
+        // 2. Actualizar el elemento en la vista de Backlog
+        let backlogItem = $(`#backlogList li`).filter(function() {
+            return $(this).find('.fw-bold.me-2').text() === `TASK-${id}`;
+        });
+        
+        if (backlogItem.length) {
+            backlogItem.find('.fw-bold').not('.me-2').text(title);
+            
+            let editBtn = backlogItem.find(`button[title="Editar"]`);
+            editBtn.attr('onclick', `openEditTaskModal(${id}, '${escapedTitle}', '${type}', '${startFormatted}', '${endFormatted}', ${sprintId || 0})`);
+            
+            let mutedDiv = backlogItem.find('.small.text-muted.mt-1');
+            let userSpan = mutedDiv.find('span:first-child').prop('outerHTML');
+            if (dateText) {
+                mutedDiv.html(`${userSpan}<span>${dateText}</span>`);
+            } else {
+                mutedDiv.html(`${userSpan}`);
+            }
+        }
     });
 }
 
 function deleteTask(id) {
     if(confirm('¿Estás seguro de que deseas eliminar esta tarea permanentemente?')) {
         $.post('/Task/DeleteTask', { id: id }, function() {
-            loadDashboard();
+            // Eliminar tarjeta del tablero Kanban con animación
+            $(`.task-card[data-id="${id}"]`).fadeOut(300, function() { 
+                $(this).remove(); 
+            });
+            
+            // Eliminar elemento de la lista del Backlog con animación
+            $(`#backlogList li`).filter(function() {
+                return $(this).find('.fw-bold.me-2').text() === `TASK-${id}`;
+            }).fadeOut(300, function() { 
+                $(this).remove(); 
+            });
         });
     }
 }
